@@ -3,6 +3,7 @@ package net.daverix.ajvm;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class Field {
     public static final int ACC_PUBLIC = 0x0001;
@@ -70,5 +71,16 @@ public class Field {
                 descriptorIndex,
                 attributes,
                 constantPool);
+    }
+
+    @Override
+    public String toString() {
+        return "Field{" +
+                "accessFlags=" + accessFlags +
+                ", nameIndex=" + nameIndex +
+                ", descriptorIndex=" + descriptorIndex +
+                ", attributes=" + Arrays.toString(attributes) +
+                ", constantPool=" + Arrays.toString(constantPool) +
+                '}';
     }
 }
