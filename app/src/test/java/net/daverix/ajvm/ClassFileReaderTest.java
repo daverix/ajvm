@@ -2,6 +2,7 @@ package net.daverix.ajvm;
 
 import org.junit.Test;
 
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -15,7 +16,7 @@ public class ClassFileReaderTest {
         File file = new File("app/build/intermediates/classes/test/debug/net/daverix/ajvm/Addition.class");
 
         ClassFile classFile;
-        try(ClassFileReader reader = new ClassFileReader(new FileInputStream(file))) {
+        try(ClassFileReader reader = new ClassFileReader(new DataInputStream(new FileInputStream(file)))) {
             classFile = reader.read();
         }
 
@@ -28,6 +29,14 @@ public class ClassFileReaderTest {
         Attribute code = addMethod.getAttributeByName("Code");
         assertThat(code).isNotNull();
 
+        CodeAttribute codeAttribute = code.asCodeAttribute();
+        assertThat(codeAttribute).isNotNull();
 
+        byte[] byteCode = codeAttribute.getCode();
+        assertThat(byteCode).isNotEmpty();
+
+        for (int i = 0; i < byteCode.length; i++) {
+
+        }
     }
 }

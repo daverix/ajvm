@@ -1,6 +1,8 @@
 package net.daverix.ajvm;
 
 
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.Arrays;
 
 public class Method {
@@ -65,5 +67,14 @@ public class Method {
         }
 
         return null;
+    }
+
+    public static Method read(DataInputStream stream, Object[] constantPool) throws IOException {
+        int accessFlags = stream.readUnsignedShort();
+        int nameIndex = stream.readUnsignedShort();
+        int descriptorIndex = stream.readUnsignedShort();
+        Attribute[] attributes = Attribute.readArray(stream, constantPool);
+
+        return new Method(accessFlags, nameIndex, descriptorIndex, attributes, constantPool);
     }
 }

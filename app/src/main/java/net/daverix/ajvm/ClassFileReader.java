@@ -4,7 +4,6 @@ package net.daverix.ajvm;
 import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 public class ClassFileReader implements Closeable {
@@ -25,11 +24,11 @@ public class ClassFileReader implements Closeable {
     private static final int CONSTANT_TAG_INVOKE_DYNAMIC = 18;
     private final DataInputStream stream;
 
-    public ClassFileReader(InputStream stream) {
+    public ClassFileReader(DataInputStream stream) {
         if(stream == null)
             throw new IllegalArgumentException("stream is null");
 
-        this.stream = new DataInputStream(stream);
+        this.stream = stream;
     }
 
     public ClassFile read() throws IOException {
@@ -46,7 +45,7 @@ public class ClassFileReader implements Closeable {
         int[] interfaces = readInterfaces();
         Field[] fields = readFields(constantPool);
         Method[] methods = readMethods(constantPool);
-        Attribute[] attributes = readAttributes(constantPool);
+        Attribute[] attributes = Attribute.readArray(stream, constantPool);
 
         return new ClassFile(majorVersion,
                 minorVersion,
@@ -64,56 +63,18 @@ public class ClassFileReader implements Closeable {
         int count = stream.readUnsignedShort();
         Method[] methods = new Method[count];
         for (int i = 0; i < count; i++) {
-            methods[i] = readMethod(constantPool);
+            methods[i] = Method.read(stream, constantPool);
         }
         return methods;
-    }
-
-    private Method readMethod(Object[] constantPool) throws IOException {
-        int accessFlags = stream.readUnsignedShort();
-        int nameIndex = stream.readUnsignedShort();
-        int descriptorIndex = stream.readUnsignedShort();
-        Attribute[] attributes = readAttributes(constantPool);
-
-        return new Method(accessFlags, nameIndex, descriptorIndex, attributes, constantPool);
     }
 
     private Field[] readFields(Object[] constantPool) throws IOException {
         int count = stream.readUnsignedShort();
         Field[] fields = new Field[count];
         for (int i = 0; i < count; i++) {
-            fields[i] = readField(constantPool);
+            fields[i] = Field.readField(stream, constantPool);
         }
         return fields;
-    }
-
-    private Field readField(Object[] constantPool) throws IOException {
-        int accessFlags = stream.readUnsignedShort();
-        int nameIndex = stream.readUnsignedShort();
-        int descriptorIndex = stream.readUnsignedShort();
-        Attribute[] attributes = readAttributes(constantPool);
-
-        return new Field(accessFlags,
-                nameIndex,
-                descriptorIndex,
-                attributes,
-                constantPool);
-    }
-
-    private Attribute[] readAttributes(Object[] constantPool) throws IOException {
-        int count = stream.readUnsignedShort();
-        Attribute[] attributes = new Attribute[count];
-        for (int i = 0; i < count; i++) {
-            attributes[i] = readAttribute(constantPool);
-        }
-        return attributes;
-    }
-
-    private Attribute readAttribute(Object[] constantPool) throws IOException {
-        int nameIndex = stream.readUnsignedShort();
-        int attributeLength = stream.readInt();
-        byte[] info = readBytes(attributeLength);
-        return new Attribute(nameIndex, info, constantPool);
     }
 
     private int[] readInterfaces() throws IOException {
@@ -153,7 +114,9 @@ public class ClassFileReader implements Closeable {
                         throw new IllegalStateException("could not read second part of long");
 
                     constantPool[i] = ByteBuffer.wrap(longBytes).getLong();
-                    i++; // we advance index by two
+                    // we advance index one additional time because we are sure that the second
+                    // part comes directly after
+                    i++;
                     continue;
                 case CONSTANT_TAG_DOUBLE:
                     byte[] doubleBytes = new byte[8];
@@ -166,8 +129,9 @@ public class ClassFileReader implements Closeable {
                         throw new IllegalStateException("could not read second part of double");
 
                     constantPool[i] = ByteBuffer.wrap(doubleBytes).getDouble();
-                    i++; // we advance index by two
-                    constantPool[i] = stream.readDouble();
+                    // we advance index one additional time because we are sure that the second
+                    // part comes directly after
+                    i++;
                     continue;
                 case CONSTANT_TAG_CLASS_REFERENCE:
                     constantPool[i] = new ClassReference(stream.readUnsignedShort(), constantPool);
@@ -198,15 +162,6 @@ public class ClassFileReader implements Closeable {
             }
         }
         return constantPool;
-    }
-
-    private byte[] readBytes(int size) throws IOException {
-        byte[] data = new byte[size];
-        int read = stream.read(data);
-        if(read != size) {
-            throw new IOException("incorrect number of bytes read: " + read + ", expected " + size);
-        }
-        return data;
     }
 
     @Override

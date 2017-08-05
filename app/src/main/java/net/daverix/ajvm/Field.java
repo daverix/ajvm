@@ -1,6 +1,9 @@
 package net.daverix.ajvm;
 
 
+import java.io.DataInputStream;
+import java.io.IOException;
+
 public class Field {
     public static final int ACC_PUBLIC = 0x0001;
     public static final int ACC_PRIVATE = 0x0002;
@@ -54,5 +57,18 @@ public class Field {
         }
 
         return null;
+    }
+
+    public static Field readField(DataInputStream stream, Object[] constantPool) throws IOException {
+        int accessFlags = stream.readUnsignedShort();
+        int nameIndex = stream.readUnsignedShort();
+        int descriptorIndex = stream.readUnsignedShort();
+        Attribute[] attributes = Attribute.readArray(stream, constantPool);
+
+        return new Field(accessFlags,
+                nameIndex,
+                descriptorIndex,
+                attributes,
+                constantPool);
     }
 }
