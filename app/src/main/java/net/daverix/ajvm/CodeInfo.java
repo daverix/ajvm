@@ -20,18 +20,18 @@ package net.daverix.ajvm;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-public class CodeAttribute {
+public class CodeInfo {
     private final int maxStack;
     private final int maxLocals;
     private final byte[] code;
     private final Exception[] exceptionTable;
     private final Attribute[] attributes;
 
-    public CodeAttribute(int maxStack,
-                         int maxLocals,
-                         byte[] code,
-                         Exception[] exceptionTable,
-                         Attribute[] attributes) {
+    public CodeInfo(int maxStack,
+                    int maxLocals,
+                    byte[] code,
+                    Exception[] exceptionTable,
+                    Attribute[] attributes) {
         this.maxStack = maxStack;
         this.maxLocals = maxLocals;
         this.code = code;
@@ -59,7 +59,7 @@ public class CodeAttribute {
         return attributes;
     }
 
-    public static CodeAttribute read(DataInputStream stream, Object[] constantPool) throws IOException {
+    public static CodeInfo read(DataInputStream stream, Object[] constantPool) throws IOException {
         int maxStack = stream.readUnsignedShort();
         int maxLocals = stream.readUnsignedShort();
         int codeLength = stream.readInt();
@@ -78,6 +78,6 @@ public class CodeAttribute {
             attributes[i] = Attribute.read(stream, constantPool);
         }
 
-        return new CodeAttribute(maxStack, maxLocals, code, exceptionTable, attributes);
+        return new CodeInfo(maxStack, maxLocals, code, exceptionTable, attributes);
     }
 }

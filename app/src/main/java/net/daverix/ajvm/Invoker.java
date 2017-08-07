@@ -17,10 +17,44 @@
 package net.daverix.ajvm;
 
 
+import java.io.IOException;
+import java.util.Stack;
+
 public class Invoker {
-    public void run(ClassFile classFile, String methodName) {
+    public static Object run(ClassFile classFile, String methodName, Object... args) throws IOException {
         Method method = classFile.getMethodByName(methodName);
+        CodeInfo codeAttribute = method.getCodeAttribute();
+        byte[] code = codeAttribute.getCode();
 
+        Stack<Object> stack = new Stack<>();
 
+        int index = 0;
+        while (index < code.length) {
+            int byteCode = code[index++] & 0xFF;
+            switch (byteCode) {
+                case Opcodes.ILOAD_0:
+                    stack.push(args[0]);
+                    break;
+                case Opcodes.ILOAD_1:
+                    stack.push(args[1]);
+                    break;
+                case Opcodes.IADD:
+                    int addSecond = (int) stack.pop();
+                    int addFirst = (int) stack.pop();
+                    stack.push(addFirst + addSecond);
+                    break;
+                case Opcodes.ISUB:
+                    int subSecond = (int) stack.pop();
+                    int subFirst = (int) stack.pop();
+                    stack.push(subFirst - subSecond);
+                    break;
+                case Opcodes.IRETURN:
+                    return stack.pop();
+                default:
+                    throw new IllegalStateException("Unknown bytecode: " + Integer.toHexString(byteCode));
+            }
+        }
+
+        return null;
     }
 }

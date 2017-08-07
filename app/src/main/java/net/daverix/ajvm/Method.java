@@ -17,6 +17,7 @@
 package net.daverix.ajvm;
 
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Arrays;
@@ -85,6 +86,16 @@ public class Method {
         return null;
     }
 
+    public CodeInfo getCodeAttribute() throws IOException {
+        Attribute attribute = getAttributeByName("Code");
+        if(attribute == null)
+            throw new IllegalStateException("code attribute not found in method " + getName());
+
+        try (DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(attribute.getInfo()))) {
+            return CodeInfo.read(dataInputStream, constantPool);
+        }
+    }
+    
     public static Method read(DataInputStream stream, Object[] constantPool) throws IOException {
         int accessFlags = stream.readUnsignedShort();
         int nameIndex = stream.readUnsignedShort();

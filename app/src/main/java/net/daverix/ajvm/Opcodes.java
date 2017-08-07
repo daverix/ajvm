@@ -16,6 +16,8 @@
  */
 package net.daverix.ajvm;
 
+import java.lang.reflect.Field;
+
 /**
  * Opcodes for Java taken from https://en.wikipedia.org/wiki/Java_bytecode_instruction_listings
  */
@@ -898,4 +900,14 @@ public class Opcodes {
      * any class file
      */
     public static final int IMPDEP2 = 0xff;
+
+    public static String getOpCodeName(int opCode) throws IllegalAccessException {
+        Field[] declaredFields = Opcodes.class.getDeclaredFields();
+        for (Field field : declaredFields) {
+            if(field.getInt(null) == opCode) {
+                return field.getName();
+            }
+        }
+        return null;
+    }
 }

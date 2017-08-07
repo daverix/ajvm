@@ -16,7 +16,6 @@
  */
 package net.daverix.ajvm;
 
-import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
@@ -39,14 +38,6 @@ public class Attribute {
 
     public byte[] getInfo() {
         return info;
-    }
-
-    public CodeAttribute asCodeAttribute() throws IOException {
-        CodeAttribute attribute;
-        try (DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(info))) {
-            attribute = CodeAttribute.read(dataInputStream, constantPool);
-        }
-        return attribute;
     }
 
     public static Attribute read(DataInputStream stream, Object[] constantPool) throws IOException {
