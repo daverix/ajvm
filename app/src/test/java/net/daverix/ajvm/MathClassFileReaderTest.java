@@ -59,4 +59,16 @@ public class MathClassFileReaderTest {
         Object result = Invoker.run(classFile, "subtract", 3, 2);
         assertThat(result).isEqualTo(1);
     }
+
+    @Test
+    public void invokeDivideSixByTwo() throws IOException {
+        Object result = Invoker.run(classFile, "divide", 6, 2);
+        assertThat(result).isEqualTo(3);
+    }
+
+    @Test
+    public void invokeMultiplyTwoByThree() throws IOException {
+        Object result = Invoker.run(classFile, "multiply", 2, 3);
+        assertThat(result).isEqualTo(6);
+    }
 }

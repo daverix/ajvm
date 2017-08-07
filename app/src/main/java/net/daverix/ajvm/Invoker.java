@@ -39,14 +39,24 @@ public class Invoker {
                     stack.push(args[1]);
                     break;
                 case Opcodes.IADD:
-                    int addSecond = (int) stack.pop();
-                    int addFirst = (int) stack.pop();
-                    stack.push(addFirst + addSecond);
+                    int iAdd2 = (int) stack.pop();
+                    int iAdd1 = (int) stack.pop();
+                    stack.push(iAdd1 + iAdd2);
                     break;
                 case Opcodes.ISUB:
-                    int subSecond = (int) stack.pop();
-                    int subFirst = (int) stack.pop();
-                    stack.push(subFirst - subSecond);
+                    int iSub2 = (int) stack.pop();
+                    int iSub1 = (int) stack.pop();
+                    stack.push(iSub1 - iSub2);
+                    break;
+                case Opcodes.IMUL:
+                    int iMul2 = (int) stack.pop();
+                    int iMul1 = (int) stack.pop();
+                    stack.push(iMul1 * iMul2);
+                    break;
+                case Opcodes.IDIV:
+                    int iDiv2 = (int) stack.pop();
+                    int iDiv1 = (int) stack.pop();
+                    stack.push(iDiv1 / iDiv2);
                     break;
                 case Opcodes.IRETURN:
                     return stack.pop();
