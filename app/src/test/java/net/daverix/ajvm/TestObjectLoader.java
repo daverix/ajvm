@@ -34,16 +34,20 @@ import java.util.Map;
 public class TestObjectLoader implements VirtualObjectLoader {
     private final Map<String, VirtualObject> staticClasses;
     private final File dir;
+    private final PrintStreamObject outStream;
 
-    public TestObjectLoader(Map<String,VirtualObject> staticClasses, File dir) {
+    public TestObjectLoader(Map<String,VirtualObject> staticClasses,
+                            File dir,
+                            PrintStreamObject outStream) {
         this.staticClasses = staticClasses;
         this.dir = dir;
+        this.outStream = outStream;
     }
 
     @Override
     public VirtualObject load(String className) throws IOException {
         if("java/lang/System".equals(className)) {
-            return new SystemObject(new PrintStreamObject(System.out));
+            return new SystemObject(outStream);
         }
 
         File file = new File(dir + "/" + className + ".class");

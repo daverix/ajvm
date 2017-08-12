@@ -18,16 +18,22 @@ package net.daverix.ajvm;
 
 
 import net.daverix.ajvm.io.VirtualObjectLoader;
+import net.daverix.ajvm.jvm.PrintStreamObject;
 import net.daverix.ajvm.jvm.VirtualObject;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashMap;
 
+import static com.google.common.truth.Truth.assertThat;
+
 public class HelloWorldTest {
+    private ByteArrayOutputStream outputStream;
     private VirtualObject sut;
 
     @Before
@@ -36,12 +42,17 @@ public class HelloWorldTest {
         File dir = new File("app/build/intermediates/classes/test/debug/");
 
         HashMap<String, VirtualObject> staticClasses = new HashMap<>();
-        VirtualObjectLoader testClassLoader = new TestObjectLoader(staticClasses, dir);
+        outputStream = new ByteArrayOutputStream();
+        VirtualObjectLoader testClassLoader = new TestObjectLoader(staticClasses,
+                dir, new PrintStreamObject(new PrintStream(outputStream)));
         sut = testClassLoader.load("net/daverix/ajvm/HelloWorld");
     }
 
     @Test
     public void run() throws IOException {
-        sut.invokeMethod("main", "([Ljava/lang/String;)V");
+        sut.invokeMethod("main", "([Ljava/lang/String;)V", "World");
+
+        //Note! We call println so the string ends with \n
+        assertThat(new String(outputStream.toByteArray())).isEqualTo("Hello World!\n");
     }
 }
