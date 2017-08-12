@@ -14,24 +14,25 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm;
+package net.daverix.ajvm.io;
 
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-public class CodeInfo {
+public class CodeAttribute {
     private final int maxStack;
     private final int maxLocals;
     private final byte[] code;
     private final Exception[] exceptionTable;
-    private final Attribute[] attributes;
+    private final AttributeInfo[] attributes;
 
-    public CodeInfo(int maxStack,
-                    int maxLocals,
-                    byte[] code,
-                    Exception[] exceptionTable,
-                    Attribute[] attributes) {
+    public CodeAttribute(int maxStack,
+                         int maxLocals,
+                         byte[] code,
+                         Exception[] exceptionTable,
+                         AttributeInfo[] attributes) {
         this.maxStack = maxStack;
         this.maxLocals = maxLocals;
         this.code = code;
@@ -55,14 +56,38 @@ public class CodeInfo {
         return exceptionTable;
     }
 
-    public Attribute[] getAttributes() {
+    public AttributeInfo[] getAttributes() {
         return attributes;
     }
 
-    public static CodeInfo read(DataInputStream stream, Object[] constantPool) throws IOException {
+    public static CodeAttribute fromMethod(MethodInfo method, Object[] constantPool) throws IOException {
+        if(method == null)
+            throw new IllegalArgumentException("method is null");
+        if(constantPool == null)
+            throw new IllegalArgumentException("constantPool is null");
+
+        AttributeInfo attribute = AttributeInfo.getAttributeByName(method.getAttributes(),
+                constantPool, "Code");
+        if (attribute == null)
+            throw new IllegalStateException("Cannot find Code attribute for method " + constantPool[method.getNameIndex()]);
+
+        return read(attribute.getInfo());
+    }
+
+    private static CodeAttribute read(byte[] info) throws IOException {
+        if(info == null)
+            throw new IllegalArgumentException("info is null");
+
+        try (DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(info))) {
+            return CodeAttribute.read(dataInputStream);
+        }
+    }
+
+    private static CodeAttribute read(DataInputStream stream) throws IOException {
         int maxStack = stream.readUnsignedShort();
         int maxLocals = stream.readUnsignedShort();
         int codeLength = stream.readInt();
+
         byte[] code = new byte[codeLength];
         if(stream.read(code) != codeLength)
             throw new IOException("could not read all bytes for code");
@@ -70,14 +95,15 @@ public class CodeInfo {
         int exceptionCount = stream.readUnsignedShort();
         Exception[] exceptionTable = new Exception[exceptionCount];
         for (int i = 0; i < exceptionCount; i++) {
-            exceptionTable[i] = Exception.read(stream, constantPool);
-        }
-        int attributeCount = stream.readUnsignedShort();
-        Attribute[] attributes = new Attribute[attributeCount];
-        for (int i = 0; i <attributeCount; i++) {
-            attributes[i] = Attribute.read(stream, constantPool);
+            exceptionTable[i] = Exception.read(stream);
         }
 
-        return new CodeInfo(maxStack, maxLocals, code, exceptionTable, attributes);
+        int attributeCount = stream.readUnsignedShort();
+        AttributeInfo[] attributes = new AttributeInfo[attributeCount];
+        for (int i = 0; i <attributeCount; i++) {
+            attributes[i] = AttributeInfo.read(stream);
+        }
+
+        return new CodeAttribute(maxStack, maxLocals, code, exceptionTable, attributes);
     }
 }

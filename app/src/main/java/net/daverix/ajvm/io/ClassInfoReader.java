@@ -14,7 +14,7 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm;
+package net.daverix.ajvm.io;
 
 
 import java.io.Closeable;
@@ -22,7 +22,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class ClassFileReader implements Closeable {
+public class ClassInfoReader implements Closeable {
     private static final int MAGIC_NUMBER = 0xCAFEBABE;
     private static final int CONSTANT_TAG_STRING = 1;
     private static final int CONSTANT_TAG_INTEGER = 3;
@@ -40,17 +40,17 @@ public class ClassFileReader implements Closeable {
     private static final int CONSTANT_TAG_INVOKE_DYNAMIC = 18;
     private final DataInputStream stream;
 
-    public ClassFileReader(DataInputStream stream) {
+    public ClassInfoReader(DataInputStream stream) {
         if(stream == null)
             throw new IllegalArgumentException("stream is null");
 
         this.stream = stream;
     }
 
-    public ClassFile read() throws IOException {
+    public ClassInfo read() throws IOException {
         int magicNumber = stream.readInt();
         if(magicNumber != MAGIC_NUMBER) {
-            throw new IOException("Not a java class file, expected " + MAGIC_NUMBER + " but got " + magicNumber);
+            throw new IOException("Not a java class file, expected " + MAGIC_NUMBER + " but got " + Integer.toHexString(magicNumber));
         }
         int minorVersion = stream.readUnsignedShort();
         int majorVersion = stream.readUnsignedShort();
@@ -59,11 +59,11 @@ public class ClassFileReader implements Closeable {
         int thisClass = stream.readUnsignedShort();
         int superClass = stream.readUnsignedShort();
         int[] interfaces = readInterfaces();
-        Field[] fields = readFields(constantPool);
-        Method[] methods = readMethods(constantPool);
-        Attribute[] attributes = Attribute.readArray(stream, constantPool);
+        FieldInfo[] fields = readFields();
+        MethodInfo[] methods = readMethods();
+        AttributeInfo[] attributes = AttributeInfo.readArray(stream);
 
-        return new ClassFile(majorVersion,
+        return new ClassInfo(majorVersion,
                 minorVersion,
                 constantPool,
                 accessFlags,
@@ -75,20 +75,20 @@ public class ClassFileReader implements Closeable {
                 attributes);
     }
 
-    private Method[] readMethods(Object[] constantPool) throws IOException {
+    private MethodInfo[] readMethods() throws IOException {
         int count = stream.readUnsignedShort();
-        Method[] methods = new Method[count];
+        MethodInfo[] methods = new MethodInfo[count];
         for (int i = 0; i < count; i++) {
-            methods[i] = Method.read(stream, constantPool);
+            methods[i] = MethodInfo.read(stream);
         }
         return methods;
     }
 
-    private Field[] readFields(Object[] constantPool) throws IOException {
+    private FieldInfo[] readFields() throws IOException {
         int count = stream.readUnsignedShort();
-        Field[] fields = new Field[count];
+        FieldInfo[] fields = new FieldInfo[count];
         for (int i = 0; i < count; i++) {
-            fields[i] = Field.readField(stream, constantPool);
+            fields[i] = FieldInfo.readField(stream);
         }
         return fields;
     }
@@ -150,10 +150,10 @@ public class ClassFileReader implements Closeable {
                     i++;
                     continue;
                 case CONSTANT_TAG_CLASS_REFERENCE:
-                    constantPool[i] = new ClassReference(stream.readUnsignedShort(), constantPool);
+                    constantPool[i] = new ClassReference(stream.readUnsignedShort());
                     continue;
                 case CONSTANT_TAG_STRING_REFERENCE:
-                    constantPool[i] = new StringReference(stream.readUnsignedShort(), constantPool);
+                    constantPool[i] = new StringReference(stream.readUnsignedShort());
                     continue;
                 case CONSTANT_TAG_FIELD_REFERENCE:
                     constantPool[i] = new FieldReference(stream.readUnsignedShort(), stream.readUnsignedShort());

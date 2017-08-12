@@ -14,25 +14,14 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm;
+package net.daverix.ajvm.io;
 
 
-public class MethodHandleReference {
+import java.io.DataInputStream;
 
+public class Exception {
 
-    private final int referenceKind;
-    private final int referenceIndex;
-
-    public MethodHandleReference(int referenceKind, int referenceIndex) {
-        this.referenceKind = referenceKind;
-        this.referenceIndex = referenceIndex;
-    }
-
-    public int getReferenceKind() {
-        return referenceKind;
-    }
-
-    public int getReferenceIndex() {
-        return referenceIndex;
+    public static Exception read(DataInputStream stream) {
+        return null;
     }
 }

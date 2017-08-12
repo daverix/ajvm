@@ -14,20 +14,23 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm;
+package net.daverix.ajvm.io;
 
 
-import java.io.IOException;
-import java.io.InputStream;
+public class NameAndTypeDescriptorReference {
+    private final int nameIndex;
+    private final int descriptorIndex;
 
-public class ByteReader {
+    public NameAndTypeDescriptorReference(int nameIndex, int descriptorIndex) {
+        this.nameIndex = nameIndex;
+        this.descriptorIndex = descriptorIndex;
+    }
 
-    public static byte[] readBytes(InputStream inputStream, int size) throws IOException {
-        byte[] data = new byte[size];
-        int read = inputStream.read(data);
-        if(read != size) {
-            throw new IOException("incorrect number of bytes read: " + read + ", expected " + size);
-        }
-        return data;
+    public int getNameIndex() {
+        return nameIndex;
+    }
+
+    public int getDescriptorIndex() {
+        return descriptorIndex;
     }
 }

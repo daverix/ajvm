@@ -14,17 +14,12 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm;
+package net.daverix.ajvm.io;
 
+import net.daverix.ajvm.jvm.VirtualObject;
 
-public class MethodTypeReference {
-    private final int descriptorIndex;
+import java.io.IOException;
 
-    public MethodTypeReference(int descriptorIndex) {
-        this.descriptorIndex = descriptorIndex;
-    }
-
-    public int getDescriptorIndex() {
-        return descriptorIndex;
-    }
+public interface VirtualObjectLoader {
+    VirtualObject load(String qualifiedName) throws IOException;
 }

@@ -14,31 +14,17 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm;
+package net.daverix.ajvm.io;
 
 
-public class MethodReference {
-    private final int classIndex;
-    private final int nameAndTypeIndex;
+public class MethodTypeReference {
+    private final int descriptorIndex;
 
-    public MethodReference(int classIndex, int nameAndTypeIndex) {
-        this.classIndex = classIndex;
-        this.nameAndTypeIndex = nameAndTypeIndex;
+    public MethodTypeReference(int descriptorIndex) {
+        this.descriptorIndex = descriptorIndex;
     }
 
-    public int getClassIndex() {
-        return classIndex;
-    }
-
-    public int getNameAndTypeIndex() {
-        return nameAndTypeIndex;
-    }
-
-    @Override
-    public String toString() {
-        return "MethodReference{" +
-                "classIndex=" + classIndex +
-                ", nameAndTypeIndex=" + nameAndTypeIndex +
-                '}';
+    public int getDescriptorIndex() {
+        return descriptorIndex;
     }
 }

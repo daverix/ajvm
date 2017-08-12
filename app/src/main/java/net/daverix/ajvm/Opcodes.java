@@ -811,16 +811,16 @@ public class Opcodes {
      */
     public static final int INVOKEDYNAMIC = 0xba;
     /**
-     * create new object of type identified by class reference in constant pool index (indexbyte1
+     * load new object of type identified by class reference in constant pool index (indexbyte1
      * << 8 + indexbyte2)
      */
     public static final int NEW = 0xbb;
     /**
-     * create new array with count elements of primitive type identified by atype
+     * load new array with count elements of primitive type identified by atype
      */
     public static final int NEWARRAY = 0xbc;
     /**
-     * create a new array of references of length count and component type identified by the
+     * load a new array of references of length count and component type identified by the
      * class reference index (indexbyte1 << 8 + indexbyte2) in the constant pool
      */
     public static final int ANEWARRAY = 0xbd;
@@ -860,7 +860,7 @@ public class Opcodes {
      */
     public static final int WIDE = 0xc4;
     /**
-     * create a new array of dimensions dimensions with elements of type identified by class
+     * load a new array of dimensions dimensions with elements of type identified by class
      * reference in constant pool index (indexbyte1 << 8 + indexbyte2); the sizes of each
      * dimension is identified by count1, [count2, etc.]
      */

@@ -14,23 +14,25 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm;
+package net.daverix.ajvm.io;
 
 
-public class FieldReference {
-    private final int classIndex;
-    private final int nameAndTypeIndex;
+public class MethodHandleReference {
 
-    public FieldReference(int classIndex, int nameAndTypeIndex) {
-        this.classIndex = classIndex;
-        this.nameAndTypeIndex = nameAndTypeIndex;
+
+    private final int referenceKind;
+    private final int referenceIndex;
+
+    public MethodHandleReference(int referenceKind, int referenceIndex) {
+        this.referenceKind = referenceKind;
+        this.referenceIndex = referenceIndex;
     }
 
-    public int getClassIndex() {
-        return classIndex;
+    public int getReferenceKind() {
+        return referenceKind;
     }
 
-    public int getNameAndTypeIndex() {
-        return nameAndTypeIndex;
+    public int getReferenceIndex() {
+        return referenceIndex;
     }
 }

@@ -14,19 +14,17 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm;
+package net.daverix.ajvm.jvm;
 
 
-public class ClassReference {
-    private final int nameIndex;
-    private final Object[] constantPool;
+import java.io.IOException;
 
-    public ClassReference(int nameIndex, Object[] constantPool) {
-        this.nameIndex = nameIndex;
-        this.constantPool = constantPool;
-    }
+public interface VirtualObject {
+    String getName();
 
-    public String getName() {
-        return (String) constantPool[nameIndex];
-    }
+    void setFieldValue(String fieldName, Object value);
+
+    Object getFieldValue(String fieldName);
+
+    Object invokeMethod(String name, String descriptor, Object... args) throws IOException;
 }

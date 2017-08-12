@@ -14,20 +14,23 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm;
+package net.daverix.ajvm.io;
 
 
-public class StringReference {
-    private final int index;
-    private final Object[] constantPool;
+public class FieldReference {
+    private final int classIndex;
+    private final int nameAndTypeIndex;
 
-    public StringReference(int index, Object[] constantPool) {
-        this.index = index;
-        this.constantPool = constantPool;
+    public FieldReference(int classIndex, int nameAndTypeIndex) {
+        this.classIndex = classIndex;
+        this.nameAndTypeIndex = nameAndTypeIndex;
     }
 
-    @Override
-    public String toString() {
-        return (String) constantPool[index];
+    public int getClassIndex() {
+        return classIndex;
+    }
+
+    public int getNameAndTypeIndex() {
+        return nameAndTypeIndex;
     }
 }

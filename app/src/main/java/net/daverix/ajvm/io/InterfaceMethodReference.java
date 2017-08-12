@@ -14,10 +14,23 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm;
+package net.daverix.ajvm.io;
 
-public class HelloWorld {
-    public static void main(String[] args) {
-        System.out.println("Hello World!");
+
+public class InterfaceMethodReference {
+    private final int classIndex;
+    private final int nameAndTypeIndex;
+
+    public InterfaceMethodReference(int classIndex, int nameAndTypeIndex) {
+        this.classIndex = classIndex;
+        this.nameAndTypeIndex = nameAndTypeIndex;
+    }
+
+    public int getClassIndex() {
+        return classIndex;
+    }
+
+    public int getNameAndTypeIndex() {
+        return nameAndTypeIndex;
     }
 }

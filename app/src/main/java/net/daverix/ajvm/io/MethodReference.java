@@ -14,23 +14,31 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm;
+package net.daverix.ajvm.io;
 
 
-public class InvokeDynamicReference {
-    private final int bootstrapMethodAttrIndex;
+public class MethodReference {
+    private final int classIndex;
     private final int nameAndTypeIndex;
 
-    public InvokeDynamicReference(int bootstrapMethodAttrIndex, int nameAndTypeIndex) {
-        this.bootstrapMethodAttrIndex = bootstrapMethodAttrIndex;
+    public MethodReference(int classIndex, int nameAndTypeIndex) {
+        this.classIndex = classIndex;
         this.nameAndTypeIndex = nameAndTypeIndex;
     }
 
-    public int getBootstrapMethodAttrIndex() {
-        return bootstrapMethodAttrIndex;
+    public int getClassIndex() {
+        return classIndex;
     }
 
     public int getNameAndTypeIndex() {
         return nameAndTypeIndex;
+    }
+
+    @Override
+    public String toString() {
+        return "MethodReference{" +
+                "classIndex=" + classIndex +
+                ", nameAndTypeIndex=" + nameAndTypeIndex +
+                '}';
     }
 }

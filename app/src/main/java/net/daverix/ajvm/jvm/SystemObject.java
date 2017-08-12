@@ -14,14 +14,38 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm;
+package net.daverix.ajvm.jvm;
 
 
-import java.io.DataInputStream;
+import java.io.IOException;
 
-public class Exception {
+public class SystemObject implements VirtualObject {
+    private final PrintStreamObject out;
 
-    public static Exception read(DataInputStream stream, Object[] constantPool) {
+    public SystemObject(PrintStreamObject out) {
+        this.out = out;
+    }
+
+    @Override
+    public String getName() {
+        return "java/lang/System";
+    }
+
+    @Override
+    public void setFieldValue(String fieldName, Object value) {
+
+    }
+
+    @Override
+    public Object getFieldValue(String fieldName) {
+        if(fieldName.equals("out"))
+            return out;
+
+        return null;
+    }
+
+    @Override
+    public Object invokeMethod(String name, String descriptor, Object... args) throws IOException {
         return null;
     }
 }

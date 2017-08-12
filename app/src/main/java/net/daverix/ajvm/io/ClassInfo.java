@@ -14,11 +14,11 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm;
+package net.daverix.ajvm.io;
 
 import java.util.Arrays;
 
-public class ClassFile {
+public class ClassInfo {
     private final int majorVersion;
     private final int minorVersion;
     private final Object[] constantPool;
@@ -26,20 +26,20 @@ public class ClassFile {
     private final int thisClass;
     private final int superClass;
     private final int[] interfaces;
-    private final Field[] fields;
-    private final Method[] methods;
-    private final Attribute[] attributes;
+    private final FieldInfo[] fields;
+    private final MethodInfo[] methods;
+    private final AttributeInfo[] attributes;
 
-    public ClassFile(int majorVersion,
+    public ClassInfo(int majorVersion,
                      int minorVersion,
                      Object[] constantPool,
                      int accessFlags,
                      int thisClass,
                      int superClass,
                      int[] interfaces,
-                     Field[] fields,
-                     Method[] methods,
-                     Attribute[] attributes) {
+                     FieldInfo[] fields,
+                     MethodInfo[] methods,
+                     AttributeInfo[] attributes) {
         this.majorVersion = majorVersion;
         this.minorVersion = minorVersion;
         this.constantPool = constantPool;
@@ -60,6 +60,10 @@ public class ClassFile {
         return minorVersion;
     }
 
+    public Object[] getConstantPool() {
+        return constantPool;
+    }
+
     public int getAccessFlags() {
         return accessFlags;
     }
@@ -68,56 +72,24 @@ public class ClassFile {
         return interfaces;
     }
 
-    public Field[] getFields() {
+    public FieldInfo[] getFields() {
         return fields;
     }
 
-    public Method[] getMethods() {
+    public MethodInfo[] getMethods() {
         return methods;
     }
 
-    public Attribute[] getAttributes() {
+    public AttributeInfo[] getAttributes() {
         return attributes;
     }
 
-    public String getClassName() {
-        ClassReference classReference = (ClassReference) constantPool[thisClass];
-        return classReference.getName();
+    public int getClassIndex() {
+        return thisClass;
     }
 
-    public String getSuperClassName() {
-        ClassReference classReference = (ClassReference) constantPool[superClass];
-        return classReference.getName();
-    }
-
-    public Method getMethodByName(String methodName) {
-        for (Method method : methods) {
-            if(methodName.equals(method.getName())) {
-                return method;
-            }
-        }
-
-        return null;
-    }
-
-    public Field getFieldByName(String fieldName) {
-        for (Field field : fields) {
-            if(fieldName.equals(field.getName())) {
-                return field;
-            }
-        }
-
-        return null;
-    }
-
-    public Attribute getAttributeByName(String name) {
-        for (Attribute attribute : attributes) {
-            if(name.equals(attribute.getName())) {
-                return attribute;
-            }
-        }
-
-        return null;
+    public int getSuperClassIndex() {
+        return superClass;
     }
 
     @Override

@@ -14,23 +14,17 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm;
+package net.daverix.ajvm.io;
 
 
-public class NameAndTypeDescriptorReference {
-    private final int nameIndex;
-    private final int descriptorIndex;
+public class StringReference {
+    private final int index;
 
-    public NameAndTypeDescriptorReference(int nameIndex, int descriptorIndex) {
-        this.nameIndex = nameIndex;
-        this.descriptorIndex = descriptorIndex;
+    public StringReference(int index) {
+        this.index = index;
     }
 
-    public int getNameIndex() {
-        return nameIndex;
-    }
-
-    public int getDescriptorIndex() {
-        return descriptorIndex;
+    public int getIndex() {
+        return index;
     }
 }

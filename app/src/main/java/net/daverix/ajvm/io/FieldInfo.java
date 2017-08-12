@@ -14,14 +14,14 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm;
+package net.daverix.ajvm.io;
 
 
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class Field {
+public class FieldInfo {
     public static final int ACC_PUBLIC = 0x0001;
     public static final int ACC_PRIVATE = 0x0002;
     public static final int ACC_PROTECTED = 0x0004;
@@ -35,58 +35,24 @@ public class Field {
     private final int accessFlags;
     private final int nameIndex;
     private final int descriptorIndex;
-    private final Attribute[] attributes;
-    private final Object[] constantPool;
+    private final AttributeInfo[] attributes;
 
-    public Field(int accessFlags,
-                 int nameIndex,
-                 int descriptorIndex,
-                 Attribute[] attributes,
-                 Object[] constantPool) {
+    private FieldInfo(int accessFlags,
+                      int nameIndex,
+                      int descriptorIndex,
+                      AttributeInfo[] attributes) {
         this.accessFlags = accessFlags;
         this.nameIndex = nameIndex;
         this.descriptorIndex = descriptorIndex;
         this.attributes = attributes;
-        this.constantPool = constantPool;
     }
 
     public int getAccessFlags() {
         return accessFlags;
     }
 
-    public String getName() {
-        return (String) constantPool[nameIndex];
-    }
-
-    public String getDescriptor() {
-        return (String) constantPool[descriptorIndex];
-    }
-
     public Object[] getAttributes() {
         return attributes;
-    }
-
-    public Attribute getAttributeByName(String name) {
-        for (Attribute attribute : attributes) {
-            if(name.equals(attribute.getName())) {
-                return attribute;
-            }
-        }
-
-        return null;
-    }
-
-    public static Field readField(DataInputStream stream, Object[] constantPool) throws IOException {
-        int accessFlags = stream.readUnsignedShort();
-        int nameIndex = stream.readUnsignedShort();
-        int descriptorIndex = stream.readUnsignedShort();
-        Attribute[] attributes = Attribute.readArray(stream, constantPool);
-
-        return new Field(accessFlags,
-                nameIndex,
-                descriptorIndex,
-                attributes,
-                constantPool);
     }
 
     @Override
@@ -96,7 +62,18 @@ public class Field {
                 ", nameIndex=" + nameIndex +
                 ", descriptorIndex=" + descriptorIndex +
                 ", attributes=" + Arrays.toString(attributes) +
-                ", constantPool=" + Arrays.toString(constantPool) +
                 '}';
+    }
+
+    public static FieldInfo readField(DataInputStream stream) throws IOException {
+        int accessFlags = stream.readUnsignedShort();
+        int nameIndex = stream.readUnsignedShort();
+        int descriptorIndex = stream.readUnsignedShort();
+        AttributeInfo[] attributes = AttributeInfo.readArray(stream);
+
+        return new FieldInfo(accessFlags,
+                nameIndex,
+                descriptorIndex,
+                attributes);
     }
 }
