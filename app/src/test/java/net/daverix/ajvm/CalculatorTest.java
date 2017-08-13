@@ -32,7 +32,7 @@ import java.util.HashMap;
 
 import static com.google.common.truth.Truth.assertThat;
 
-public class HelloWorldTest {
+public class CalculatorTest {
     private ByteArrayOutputStream outputStream;
     private VirtualObject sut;
 
@@ -45,14 +45,51 @@ public class HelloWorldTest {
         outputStream = new ByteArrayOutputStream();
         VirtualObjectLoader testClassLoader = new TestObjectLoader(staticClasses,
                 dir, new PrintStreamObject(new PrintStream(outputStream)));
-        sut = testClassLoader.load("net/daverix/ajvm/HelloWorld");
+        sut = testClassLoader.load("net/daverix/ajvm/Calculator");
     }
 
     @Test
-    public void run() throws IOException {
-        sut.invokeMethod("main", "([Ljava/lang/String;)V", new Object[]{new String[]{"World"}});
+    public void add() throws IOException {
+        invokeCalculator("1 + 2");
 
         //Note! We call println so the string ends with \n
-        assertThat(new String(outputStream.toByteArray())).isEqualTo("Hello World!\n");
+        assertThat(new String(outputStream.toByteArray())).isEqualTo("3\n");
+    }
+
+    @Test
+    public void subtract() throws IOException {
+        invokeCalculator("3 - 2");
+
+        //Note! We call println so the string ends with \n
+        assertThat(new String(outputStream.toByteArray())).isEqualTo("1\n");
+    }
+
+    @Test
+    public void divide() throws IOException {
+        invokeCalculator("6 / 2");
+
+        //Note! We call println so the string ends with \n
+        assertThat(new String(outputStream.toByteArray())).isEqualTo("3\n");
+    }
+
+    @Test
+    public void multiply() throws IOException {
+        invokeCalculator("2 * 3");
+
+        //Note! We call println so the string ends with \n
+        assertThat(new String(outputStream.toByteArray())).isEqualTo("6\n");
+    }
+
+    @Test
+    public void modulus() throws IOException {
+        invokeCalculator("5 % 2");
+
+        //Note! We call println so the string ends with \n
+        assertThat(new String(outputStream.toByteArray())).isEqualTo("1\n");
+    }
+
+    private void invokeCalculator(String args) throws IOException {
+        sut.invokeMethod("main", "([Ljava/lang/String;)V",
+                new Object[]{args.split(" ")});
     }
 }

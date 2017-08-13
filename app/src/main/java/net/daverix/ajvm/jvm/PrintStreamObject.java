@@ -28,6 +28,11 @@ public class PrintStreamObject implements VirtualObject {
     }
 
     @Override
+    public void initialize(Object[] args) {
+
+    }
+
+    @Override
     public String getName() {
         return "java/io/PrintStream";
     }
@@ -44,8 +49,11 @@ public class PrintStreamObject implements VirtualObject {
 
     @Override
     public Object invokeMethod(String name, String descriptor, Object... args) throws IOException {
-        if(name.equals("println") && "(Ljava/lang/String;)V".equals(descriptor)) {
+        if("println".equals(name) && "(Ljava/lang/String;)V".equals(descriptor)) {
             printStream.println((String) args[0]);
+            return null;
+        } else if("println".equals(name) && "(I)V".equals(descriptor)) {
+            printStream.println((int) args[0]);
             return null;
         }
 

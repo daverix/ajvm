@@ -11,6 +11,11 @@ public class StringBuilderObject implements VirtualObject {
     }
 
     @Override
+    public void initialize(Object[] args) {
+
+    }
+
+    @Override
     public String getName() {
         return "java/lang/StringBuilder";
     }

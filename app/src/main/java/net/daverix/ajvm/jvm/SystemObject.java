@@ -27,6 +27,11 @@ public class SystemObject implements VirtualObject {
     }
 
     @Override
+    public void initialize(Object[] args) {
+
+    }
+
+    @Override
     public String getName() {
         return "java/lang/System";
     }

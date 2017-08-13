@@ -20,6 +20,7 @@ package net.daverix.ajvm;
 import net.daverix.ajvm.io.ClassInfo;
 import net.daverix.ajvm.io.ClassInfoReader;
 import net.daverix.ajvm.io.VirtualObjectLoader;
+import net.daverix.ajvm.jvm.IntegerObject;
 import net.daverix.ajvm.jvm.PrintStreamObject;
 import net.daverix.ajvm.jvm.RuntimeVirtualObject;
 import net.daverix.ajvm.jvm.StringBuilderObject;
@@ -51,6 +52,8 @@ public class TestObjectLoader implements VirtualObjectLoader {
             return new SystemObject(outStream);
         } else if("java/lang/StringBuilder".equals(className)) {
             return new StringBuilderObject();
+        } else if("java/lang/Integer".equals(className)) {
+            return new IntegerObject();
         }
 
         File file = new File(dir + "/" + className + ".class");

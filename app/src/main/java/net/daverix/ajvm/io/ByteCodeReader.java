@@ -86,4 +86,16 @@ public class ByteCodeReader {
 
         return Double.longBitsToDouble(readLong());
     }
+
+    public void skip(int count) {
+        index+=count;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void jumpTo(int index) {
+        this.index = index;
+    }
 }

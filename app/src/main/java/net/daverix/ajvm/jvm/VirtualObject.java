@@ -20,11 +20,13 @@ package net.daverix.ajvm.jvm;
 import java.io.IOException;
 
 public interface VirtualObject {
+    void initialize(Object[] args);
+
     String getName();
 
     void setFieldValue(String fieldName, Object value);
 
     Object getFieldValue(String fieldName);
 
-    Object invokeMethod(String name, String descriptor, Object... args) throws IOException;
+    Object invokeMethod(String name, String descriptor, Object[] args) throws IOException;
 }
