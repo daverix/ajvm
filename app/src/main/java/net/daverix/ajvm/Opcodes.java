@@ -16,6 +16,8 @@
  */
 package net.daverix.ajvm;
 
+import net.daverix.ajvm.io.ByteCodeReader;
+
 import java.lang.reflect.Field;
 
 /**
@@ -901,13 +903,48 @@ public class Opcodes {
      */
     public static final int IMPDEP2 = 0xff;
 
-    public static String getOpCodeName(int opCode) throws IllegalAccessException {
+    public static String getName(int code) throws IllegalAccessException {
         Field[] declaredFields = Opcodes.class.getDeclaredFields();
         for (Field field : declaredFields) {
-            if(field.getInt(null) == opCode) {
-                return field.getName();
+            if(field.getInt(null) == code) {
+                return field.getName().toLowerCase();
             }
         }
         return null;
+    }
+
+    public static String visualize(byte[] code) throws IllegalAccessException {
+        StringBuilder builder = new StringBuilder();
+        ByteCodeReader reader = new ByteCodeReader(code);
+        while (reader.canReadByte()) {
+            int bytecode = reader.readUnsignedByte();
+            String opcodeName = getName(bytecode);
+            if(opcodeName != null) {
+                builder.append(opcodeName).append(" ");
+            } else {
+                builder.append(bytecode).append(" (unknown) ");
+            }
+
+            switch (bytecode) {
+                case Opcodes.NEW:
+                case Opcodes.GETSTATIC:
+                case Opcodes.INVOKEVIRTUAL:
+                case Opcodes.INVOKESPECIAL:
+                    builder.append(reader.readUnsignedShort()).append("\n");
+                    break;
+                case Opcodes.LDC:
+                case Opcodes.ILOAD:
+                case Opcodes.LLOAD:
+                case Opcodes.FLOAD:
+                case Opcodes.DLOAD:
+                case Opcodes.ALOAD:
+                    builder.append(reader.readUnsignedByte()).append("\n");
+                    break;
+                default:
+                    builder.append("\n");
+            }
+        }
+
+        return builder.toString();
     }
 }

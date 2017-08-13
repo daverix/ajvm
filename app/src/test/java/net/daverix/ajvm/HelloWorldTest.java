@@ -50,7 +50,7 @@ public class HelloWorldTest {
 
     @Test
     public void run() throws IOException {
-        sut.invokeMethod("main", "([Ljava/lang/String;)V", "World");
+        sut.invokeMethod("main", "([Ljava/lang/String;)V", (Object) new String[]{"World"});
 
         //Note! We call println so the string ends with \n
         assertThat(new String(outputStream.toByteArray())).isEqualTo("Hello World!\n");

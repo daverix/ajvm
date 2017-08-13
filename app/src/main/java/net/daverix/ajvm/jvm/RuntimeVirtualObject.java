@@ -72,47 +72,63 @@ public class RuntimeVirtualObject implements VirtualObject {
     @Override
     public Object invokeMethod(String name, String descriptor, Object[] args) throws IOException {
         MethodInfo method = getMethodByNameAndDescriptor(name, descriptor);
-        if(method == null)
+        if (method == null)
             throw new IllegalArgumentException("Cannot find method with name " + name + " and descriptor " + descriptor);
 
-        CodeAttribute codeAttribute = fromMethod(method, classInfo.getConstantPool());
+        Object[] constantPool = classInfo.getConstantPool();
+        CodeAttribute codeAttribute = fromMethod(method, constantPool);
         ByteCodeReader reader = new ByteCodeReader(codeAttribute.getCode());
 
         Stack<Frame> stackFrames = new Stack<>();
-        Frame currentFrame = new Frame(classInfo.getConstantPool(),
+        Frame currentFrame = new Frame(
                 codeAttribute.getMaxLocals(),
                 codeAttribute.getMaxStack());
+        for (int i = 0; i < args.length; i++) {
+            currentFrame.setLocalVariable(i, args[i]);
+        }
+
         stackFrames.push(currentFrame);
 
         while (reader.canReadByte()) {
             int byteCode = reader.readUnsignedByte();
 
             switch (byteCode) {
+                case Opcodes.NEW:
+                    int newObjectIndex = reader.readUnsignedShort();
+                    ClassReference classRef = (ClassReference) constantPool[newObjectIndex];
+                    String className = (String) constantPool[classRef.getNameIndex()];
+
+                    VirtualObject virtualObject = loader.load(className);
+                    currentFrame.push(virtualObject);
+                    break;
+                case Opcodes.DUP:
+                    currentFrame.push(currentFrame.peek());
+                    break;
                 case Opcodes.LDC:
                     int ldcIndex = reader.readUnsignedByte();
 
-                    Object constant = currentFrame.getConstant(ldcIndex);
+                    Object constant = constantPool[ldcIndex];
                     if (constant instanceof Integer ||
                             constant instanceof Float ||
                             constant instanceof String ||
                             constant instanceof MethodHandleReference) {
                         currentFrame.push(constant);
                     } else if (constant instanceof StringReference) {
-                        currentFrame.push(classInfo.getConstantPool()[((StringReference) constant).getIndex()]);
+                        currentFrame.push(constantPool[((StringReference) constant).getIndex()]);
                     }
                     break;
                 case Opcodes.GETSTATIC:
                     int staticFieldIndex = reader.readUnsignedShort();
 
-                    FieldReference fieldReference = (FieldReference) currentFrame.getConstant(staticFieldIndex);
-                    NameAndTypeDescriptorReference fieldNameAndType = (NameAndTypeDescriptorReference) currentFrame.getConstant(fieldReference.getNameAndTypeIndex());
-                    String fieldName = (String) currentFrame.getConstant(fieldNameAndType.getNameIndex());
+                    FieldReference fieldReference = (FieldReference) constantPool[staticFieldIndex];
+                    NameAndTypeDescriptorReference fieldNameAndType = (NameAndTypeDescriptorReference) constantPool[fieldReference.getNameAndTypeIndex()];
+                    String fieldName = (String) constantPool[fieldNameAndType.getNameIndex()];
 
-                    ClassReference classReference = (ClassReference) currentFrame.getConstant(fieldReference.getClassIndex());
-                    String fieldClassName = (String) currentFrame.getConstant(classReference.getNameIndex());
+                    ClassReference classReference = (ClassReference) constantPool[fieldReference.getClassIndex()];
+                    String fieldClassName = (String) constantPool[classReference.getNameIndex()];
 
                     VirtualObject staticClass = staticClasses.get(fieldClassName);
-                    if(staticClass == null) {
+                    if (staticClass == null) {
                         staticClass = loader.load(fieldClassName);
                         staticClasses.put(fieldClassName, staticClass);
                     }
@@ -121,25 +137,13 @@ public class RuntimeVirtualObject implements VirtualObject {
                     break;
                 case Opcodes.INVOKEVIRTUAL:
                     int invokeVirtualIndex = reader.readUnsignedShort();
-
-                    MethodReference methodReference = (MethodReference) currentFrame.getConstant(invokeVirtualIndex);
-                    NameAndTypeDescriptorReference nameAndType = (NameAndTypeDescriptorReference) currentFrame.getConstant(methodReference.getNameAndTypeIndex());
-                    String methodName = (String) currentFrame.getConstant(nameAndType.getNameIndex());
-                    String methodDescriptor = (String) currentFrame.getConstant(nameAndType.getDescriptorIndex());
-                    int argumentCount = getArgumentCount(methodDescriptor);
-
-                    Object[] methodArgs = new Object[argumentCount];
-                    for (int i = 0; i < argumentCount; i++) {
-                        methodArgs[i] = currentFrame.pop();
-                    }
-
-                    Object instance = currentFrame.pop();
-                    if(instance instanceof VirtualObject) {
-                        ((VirtualObject) instance).invokeMethod(methodName, methodDescriptor, methodArgs);
-                    } else {
-                        throw new UnsupportedOperationException("don't know how to handle " + instance);
-                    }
-
+                    invokeMethod(constantPool, currentFrame, invokeVirtualIndex);
+                    break;
+                case Opcodes.INVOKESPECIAL:
+                    int invokeSpecialIndex = reader.readUnsignedShort();
+                    //TODO: http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.invokespecial
+                    // need to call super methods etc properly
+                    invokeMethod(constantPool, currentFrame, invokeSpecialIndex);
                     break;
                 case Opcodes.ICONST_M1:
                     currentFrame.push(-1);
@@ -172,32 +176,42 @@ public class RuntimeVirtualObject implements VirtualObject {
                 case Opcodes.LLOAD_0:
                 case Opcodes.FLOAD_0:
                 case Opcodes.DLOAD_0:
+                case Opcodes.ALOAD_0:
                     currentFrame.push(currentFrame.getLocalVariable(0));
                     break;
                 case Opcodes.ILOAD_1:
                 case Opcodes.LLOAD_1:
                 case Opcodes.FLOAD_1:
                 case Opcodes.DLOAD_1:
+                case Opcodes.ALOAD_1:
                     currentFrame.push(currentFrame.getLocalVariable(1));
                     break;
                 case Opcodes.ILOAD_2:
                 case Opcodes.LLOAD_2:
                 case Opcodes.FLOAD_2:
                 case Opcodes.DLOAD_2:
+                case Opcodes.ALOAD_2:
                     currentFrame.push(currentFrame.getLocalVariable(2));
                     break;
                 case Opcodes.ILOAD_3:
                 case Opcodes.LLOAD_3:
                 case Opcodes.FLOAD_3:
                 case Opcodes.DLOAD_3:
+                case Opcodes.ALOAD_3:
                     currentFrame.push(currentFrame.getLocalVariable(3));
                     break;
                 case Opcodes.ILOAD:
                 case Opcodes.LLOAD:
                 case Opcodes.FLOAD:
                 case Opcodes.DLOAD:
+                case Opcodes.ALOAD:
                     int loadIndex = reader.readUnsignedByte();
                     currentFrame.push(currentFrame.getLocalVariable(loadIndex));
+                    break;
+                case Opcodes.AALOAD:
+                    int index = (int) currentFrame.pop();
+                    Object[] array = (Object[]) currentFrame.pop();
+                    currentFrame.push(array[index]);
                     break;
                 case Opcodes.IADD:
                     iadd(currentFrame);
@@ -225,6 +239,29 @@ public class RuntimeVirtualObject implements VirtualObject {
         return null;
     }
 
+    private void invokeMethod(Object[] constantPool, Frame currentFrame, int methodReferenceIndex) throws IOException {
+        MethodReference methodReference = (MethodReference) constantPool[methodReferenceIndex];
+        NameAndTypeDescriptorReference nameAndType = (NameAndTypeDescriptorReference) constantPool[methodReference.getNameAndTypeIndex()];
+        String methodName = (String) constantPool[nameAndType.getNameIndex()];
+        String methodDescriptor = (String) constantPool[nameAndType.getDescriptorIndex()];
+        int argumentCount = getArgumentCount(methodDescriptor);
+
+        Object[] methodArgs = new Object[argumentCount];
+        for (int i = argumentCount-1; i>=0; i--) {
+            methodArgs[i] = currentFrame.pop();
+        }
+
+        Object instance = currentFrame.pop();
+        if (instance instanceof VirtualObject) {
+            Object result = ((VirtualObject) instance).invokeMethod(methodName, methodDescriptor, methodArgs);
+            if(!methodDescriptor.endsWith("V")) {
+                currentFrame.push(result);
+            }
+        } else {
+            throw new UnsupportedOperationException("don't know how to handle " + instance);
+        }
+    }
+
     private static void iadd(Frame currentFrame) {
         int iAdd2 = (int) currentFrame.pop();
         int iAdd1 = (int) currentFrame.pop();
@@ -250,6 +287,9 @@ public class RuntimeVirtualObject implements VirtualObject {
     }
 
     private static int getArgumentCount(String descriptor) {
+        if(descriptor.startsWith("()"))
+            return 0;
+
         Matcher matcher = METHOD_PARAMETER_COUNT_PATTERN.matcher(descriptor);
         return matcher.groupCount();
     }
@@ -262,7 +302,7 @@ public class RuntimeVirtualObject implements VirtualObject {
             String constantName = (String) constantPool[method.getNameIndex()];
             String constantDescriptor = (String) constantPool[method.getDescriptorIndex()];
 
-            if(methodName.equals(constantName) && descriptor.equals(constantDescriptor)) {
+            if (methodName.equals(constantName) && descriptor.equals(constantDescriptor)) {
                 return method;
             }
         }

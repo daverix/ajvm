@@ -22,6 +22,7 @@ import net.daverix.ajvm.io.ClassInfoReader;
 import net.daverix.ajvm.io.VirtualObjectLoader;
 import net.daverix.ajvm.jvm.PrintStreamObject;
 import net.daverix.ajvm.jvm.RuntimeVirtualObject;
+import net.daverix.ajvm.jvm.StringBuilderObject;
 import net.daverix.ajvm.jvm.SystemObject;
 import net.daverix.ajvm.jvm.VirtualObject;
 
@@ -48,6 +49,8 @@ public class TestObjectLoader implements VirtualObjectLoader {
     public VirtualObject load(String className) throws IOException {
         if("java/lang/System".equals(className)) {
             return new SystemObject(outStream);
+        } else if("java/lang/StringBuilder".equals(className)) {
+            return new StringBuilderObject();
         }
 
         File file = new File(dir + "/" + className + ".class");

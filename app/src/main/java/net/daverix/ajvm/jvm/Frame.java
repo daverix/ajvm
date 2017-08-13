@@ -22,14 +22,11 @@ import java.util.Stack;
 public class Frame {
     private final Stack<Object> operandStack = new Stack<>();
     private final Object[] localVariables;
-    private final Object[] classConstantPool;
     private final int maxStackDepth;
 
-    public Frame(Object[] classConstantPool,
-                 int maxLocals,
+    public Frame(int maxLocals,
                  int maxStackDepth) {
         this.localVariables = new Object[maxLocals];
-        this.classConstantPool = classConstantPool;
         this.maxStackDepth = maxStackDepth;
     }
 
@@ -52,7 +49,7 @@ public class Frame {
         return localVariables[index];
     }
 
-    public Object getConstant(int index) {
-        return classConstantPool[index];
+    public Object peek() {
+        return operandStack.peek();
     }
 }
