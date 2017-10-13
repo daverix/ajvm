@@ -57,6 +57,6 @@ public class PrintStreamObject implements VirtualObject {
             return null;
         }
 
-        throw new UnsupportedOperationException(name + " with descriptor " + descriptor + " not implemented");
+        throw new NoSuchMethodError(name + " with descriptor " + descriptor + " not implemented");
     }
 }
