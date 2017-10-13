@@ -21,9 +21,12 @@ import java.io.IOException;
 
 public class SystemObject implements VirtualObject {
     private final PrintStreamObject out;
+    private final PrintStreamObject err;
 
-    public SystemObject(PrintStreamObject out) {
+    public SystemObject(PrintStreamObject out,
+                        PrintStreamObject err) {
         this.out = out;
+        this.err = err;
     }
 
     @Override
@@ -43,8 +46,11 @@ public class SystemObject implements VirtualObject {
 
     @Override
     public Object getFieldValue(String fieldName) {
-        if(fieldName.equals("out"))
+        if("out".equals(fieldName))
             return out;
+
+        if("err".equals(fieldName))
+            return err;
 
         return null;
     }

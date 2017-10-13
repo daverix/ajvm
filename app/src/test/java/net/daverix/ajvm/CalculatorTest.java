@@ -34,6 +34,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 public class CalculatorTest {
     private ByteArrayOutputStream outputStream;
+    private ByteArrayOutputStream errStream;
     private VirtualObject sut;
 
     @Before
@@ -43,8 +44,12 @@ public class CalculatorTest {
 
         HashMap<String, VirtualObject> staticClasses = new HashMap<>();
         outputStream = new ByteArrayOutputStream();
+        errStream = new ByteArrayOutputStream();
+
         VirtualObjectLoader testClassLoader = new TestObjectLoader(staticClasses,
-                dir, new PrintStreamObject(new PrintStream(outputStream)));
+                dir,
+                new PrintStreamObject(new PrintStream(outputStream)),
+                new PrintStreamObject(new PrintStream(errStream)));
         sut = testClassLoader.load("net/daverix/ajvm/Calculator");
     }
 

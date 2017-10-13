@@ -37,19 +37,22 @@ public class TestObjectLoader implements VirtualObjectLoader {
     private final Map<String, VirtualObject> staticClasses;
     private final File dir;
     private final PrintStreamObject outStream;
+    private final PrintStreamObject errStream;
 
-    public TestObjectLoader(Map<String,VirtualObject> staticClasses,
+    public TestObjectLoader(Map<String, VirtualObject> staticClasses,
                             File dir,
-                            PrintStreamObject outStream) {
+                            PrintStreamObject outStream,
+                            PrintStreamObject errStream) {
         this.staticClasses = staticClasses;
         this.dir = dir;
         this.outStream = outStream;
+        this.errStream = errStream;
     }
 
     @Override
     public VirtualObject load(String className) throws IOException {
         if("java/lang/System".equals(className)) {
-            return new SystemObject(outStream);
+            return new SystemObject(outStream, errStream);
         } else if("java/lang/StringBuilder".equals(className)) {
             return new StringBuilderObject();
         } else if("java/lang/Integer".equals(className)) {
