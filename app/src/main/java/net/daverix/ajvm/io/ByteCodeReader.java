@@ -33,14 +33,14 @@ public class ByteCodeReader {
     }
 
     public int readUnsignedByte() {
-        if(!canReadByte())
+        if (!canReadByte())
             throw new IllegalStateException("Cannot read byte, reached end of array");
 
         return code[index++] & 0xFF;
     }
 
     public int readUnsignedShort() {
-        if(!canRead(2))
+        if (!canRead(2))
             throw new IllegalStateException("Cannot read short, reached end of array");
 
         int first = code[index++];
@@ -50,17 +50,17 @@ public class ByteCodeReader {
     }
 
     public int readInt() {
-        if(!canRead(4))
+        if (!canRead(4))
             throw new IllegalStateException("Cannot read int, reached end of array");
 
-        return (code[index++] << 24) +
-                (code[index++] << 16) +
-                (code[index++] << 8) +
+        return (code[index++] << 24) |
+                (code[index++] << 16) |
+                (code[index++] << 8) |
                 code[index++];
     }
 
     public long readLong() {
-        if(!canRead(8))
+        if (!canRead(8))
             throw new IllegalStateException("Cannot read long, reached end of array");
 
         return ((long) (code[index++] & 0xFF) << 56) +
@@ -74,21 +74,24 @@ public class ByteCodeReader {
     }
 
     public float readFloat() {
-        if(!canRead(4))
+        if (!canRead(4))
             throw new IllegalStateException("Cannot read float, reached end of array");
 
         return Float.intBitsToFloat(readInt());
     }
 
     public double readDouble() {
-        if(!canRead(8))
+        if (!canRead(8))
             throw new IllegalStateException("Cannot read double, reached end of array");
 
         return Double.longBitsToDouble(readLong());
     }
 
     public void skip(int count) {
-        index+=count;
+        if ((index + count) < 0 || (index + count) >= code.length)
+            throw new IllegalArgumentException("count " + count + " would put index out of range");
+
+        index += count;
     }
 
     public int getIndex() {
@@ -96,6 +99,9 @@ public class ByteCodeReader {
     }
 
     public void jumpTo(int index) {
+        if (index < 0 || index >= code.length)
+            throw new IllegalArgumentException(index + " is outside range");
+
         this.index = index;
     }
 }
