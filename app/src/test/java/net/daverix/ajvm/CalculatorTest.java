@@ -93,6 +93,14 @@ public class CalculatorTest {
         assertThat(new String(outputStream.toByteArray())).isEqualTo("1\n");
     }
 
+    @Test
+    public void testError() throws IOException {
+        invokeCalculator("5 ? 2");
+
+        //Note! We call println so the string ends with \n
+        assertThat(new String(errStream.toByteArray())).isEqualTo("Unknown operator ?\n");
+    }
+
     private void invokeCalculator(String args) throws IOException {
         sut.invokeMethod("main", "([Ljava/lang/String;)V",
                 new Object[]{args.split(" ")});

@@ -32,6 +32,7 @@ import net.daverix.ajvm.io.VirtualObjectLoader;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -276,24 +277,30 @@ public class RuntimeVirtualObject implements VirtualObject {
                     int defaultValue = reader.readInt();
                     int low = reader.readInt();
                     int high = reader.readInt();
+                    if(low > high) {
+                        throw new IllegalStateException(String.format(Locale.ENGLISH,
+                                "low is higher than high: %d > %d", low, high));
+                    }
+
                     int offsetWidth = high - low + 1;
                     int[] table = new int[offsetWidth];
                     for (int i = 0; i < offsetWidth; i++) {
                         table[i] = reader.readInt();
                     }
                     int tableIndex = (int) currentFrame.pop();
-                    int offset;
-                    if(tableIndex < low || tableIndex > high) {
-                        offset = indexOfBytecode + defaultValue;
+                    int targetAddress;
+                    if ((tableIndex < low) || (tableIndex > high)) {
+                        // TODO: why would Math.abs be needed to turn for example -120 into 120 here?
+                        targetAddress = indexOfBytecode + Math.abs(defaultValue);
                     } else {
-                        offset = table[tableIndex - low];
+                        targetAddress = indexOfBytecode + table[tableIndex - low];
                     }
-                    reader.jumpTo(indexOfBytecode + offset);
+                    reader.jumpTo(targetAddress);
                     break;
                 case Opcodes.IFEQ:
                     int ifEqOffset = reader.readUnsignedShort();
                     int value = (int) currentFrame.pop();
-                    if(value == 0) {
+                    if (value == 0) {
                         reader.jumpTo(indexOfBytecode + ifEqOffset);
                     }
                     break;
@@ -305,7 +312,13 @@ public class RuntimeVirtualObject implements VirtualObject {
                     currentFrame = stackFrames.pop();
                     break;
                 case Opcodes.IRETURN:
-                    //return currentFrame.pop();
+                    return currentFrame.pop();
+                case Opcodes.NOP:
+                    // no operation
+                    break;
+                case Opcodes.L2I:
+                    long longValue = (long) currentFrame.pop();
+                    currentFrame.push((int) longValue);
                     break;
                 default:
                     throw new IllegalStateException("Unknown bytecode: " + Integer.toHexString(byteCode));
@@ -323,7 +336,7 @@ public class RuntimeVirtualObject implements VirtualObject {
         int argumentCount = getArgumentCount(methodDescriptor);
 
         Object[] methodArgs = new Object[argumentCount];
-        for (int i = argumentCount-1; i>=0; i--) {
+        for (int i = argumentCount - 1; i >= 0; i--) {
             methodArgs[i] = currentFrame.pop();
         }
 
@@ -336,7 +349,7 @@ public class RuntimeVirtualObject implements VirtualObject {
         }
 
         Object result = staticClass.invokeMethod(methodName, methodDescriptor, methodArgs);
-        if(!methodDescriptor.endsWith("V")) {
+        if (!methodDescriptor.endsWith("V")) {
             currentFrame.push(result);
         }
     }
@@ -349,20 +362,22 @@ public class RuntimeVirtualObject implements VirtualObject {
         int argumentCount = getArgumentCount(methodDescriptor);
 
         Object[] methodArgs = new Object[argumentCount];
-        for (int i = argumentCount-1; i>=0; i--) {
+        for (int i = argumentCount - 1; i >= 0; i--) {
             methodArgs[i] = currentFrame.pop();
         }
 
         Object instance = currentFrame.pop();
         if (instance instanceof VirtualObject) {
             Object result = ((VirtualObject) instance).invokeMethod(methodName, methodDescriptor, methodArgs);
-            if(!methodDescriptor.endsWith("V")) {
+            if (!methodDescriptor.endsWith("V")) {
                 currentFrame.push(result);
             }
-        } else if(instance instanceof String && methodName.equals("hashCode")) {
+        } else if (instance instanceof String && methodName.equals("hashCode")) {
             currentFrame.push(instance.hashCode());
-        } else if(instance instanceof String && methodName.equals("equals")) {
+        } else if (instance instanceof String && methodName.equals("equals")) {
             currentFrame.push(instance.equals(methodArgs[0]) ? 1 : 0);
+        } else if (instance instanceof Integer) {
+            currentFrame.push(instance == methodArgs[0] ? 1 : 0);
         } else {
             throw new UnsupportedOperationException("don't know how to handle " + instance);
         }
@@ -399,7 +414,7 @@ public class RuntimeVirtualObject implements VirtualObject {
     }
 
     private static int getArgumentCount(String descriptor) {
-        if(descriptor.startsWith("()"))
+        if (descriptor.startsWith("()"))
             return 0;
 
         Matcher matcher = METHOD_PARAMETER_COUNT_PATTERN.matcher(descriptor);
@@ -407,8 +422,6 @@ public class RuntimeVirtualObject implements VirtualObject {
     }
 
     private MethodInfo getMethodByNameAndDescriptor(String methodName, String descriptor) {
-        Object[] constantPool = classInfo.getConstantPool();
-
         MethodInfo[] methods = classInfo.getMethods();
         for (MethodInfo method : methods) {
             String constantName = (String) constantPool[method.getNameIndex()];
@@ -419,6 +432,6 @@ public class RuntimeVirtualObject implements VirtualObject {
             }
         }
 
-        return null;
+        throw new NoSuchMethodError("Cannot find method " + methodName + " in " + getName());
     }
 }
