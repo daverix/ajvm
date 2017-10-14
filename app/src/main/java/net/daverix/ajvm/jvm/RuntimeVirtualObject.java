@@ -82,10 +82,10 @@ public class RuntimeVirtualObject implements VirtualObject {
         while (reader.canReadByte()) {
             int indexOfBytecode = reader.getIndex();
             int byteCode = reader.readUnsignedByte();
-            if(byteCode == Opcodes.RETURN)
+            if(byteCode == Opcodes.INSTANCE.getRETURN())
                 return null;
 
-            if(byteCode == Opcodes.IRETURN)
+            if(byteCode == Opcodes.INSTANCE.getIRETURN())
                 return currentFrame.pop();
 
             ByteCodeOperation operation = byteCodeOperations.get(byteCode);
