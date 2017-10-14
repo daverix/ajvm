@@ -1,14 +1,16 @@
 package net.daverix.ajvm.jvm;
 
 
-import net.daverix.ajvm.io.ByteCodeReader;
+import net.daverix.ajvm.Frame;
+import net.daverix.ajvm.VirtualObject;
+import net.daverix.ajvm.ByteCodeReader;
 import net.daverix.ajvm.io.ConstantPool;
 import net.daverix.ajvm.io.MethodReference;
 import net.daverix.ajvm.io.NameAndTypeDescriptorReference;
 
 import java.io.IOException;
 
-import static net.daverix.ajvm.jvm.MethodUtils.getArgumentCount;
+import static net.daverix.ajvm.MethodUtils.getArgumentCount;
 
 public class InvokeSpecialOperation implements ByteCodeOperation {
     private final ConstantPool constantPool;

@@ -17,6 +17,8 @@
 package net.daverix.ajvm.jvm;
 
 
+import net.daverix.ajvm.VirtualObject;
+
 import java.io.IOException;
 import java.io.PrintStream;
 

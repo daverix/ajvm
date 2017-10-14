@@ -1,4 +1,4 @@
-package net.daverix.ajvm.jvm;
+package net.daverix.ajvm;
 
 
 import java.util.regex.Matcher;

@@ -14,7 +14,7 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm.io
+package net.daverix.ajvm
 
 class ByteCodeReader(private val code: ByteArray) {
     var index = 0

@@ -17,8 +17,10 @@
 package net.daverix.ajvm.jvm;
 
 
+import net.daverix.ajvm.Frame;
 import net.daverix.ajvm.Opcodes;
-import net.daverix.ajvm.io.ByteCodeReader;
+import net.daverix.ajvm.VirtualObject;
+import net.daverix.ajvm.ByteCodeReader;
 import net.daverix.ajvm.io.ClassInfo;
 import net.daverix.ajvm.io.CodeAttribute;
 import net.daverix.ajvm.io.ConstantPool;

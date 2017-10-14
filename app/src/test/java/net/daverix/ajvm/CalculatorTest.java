@@ -17,9 +17,7 @@
 package net.daverix.ajvm;
 
 
-import net.daverix.ajvm.io.VirtualObjectLoader;
 import net.daverix.ajvm.jvm.PrintStreamObject;
-import net.daverix.ajvm.jvm.VirtualObject;
 
 import org.junit.Before;
 import org.junit.Test;

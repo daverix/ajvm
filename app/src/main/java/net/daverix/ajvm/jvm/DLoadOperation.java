@@ -1,7 +1,8 @@
 package net.daverix.ajvm.jvm;
 
 
-import net.daverix.ajvm.io.ByteCodeReader;
+import net.daverix.ajvm.Frame;
+import net.daverix.ajvm.ByteCodeReader;
 
 import java.io.IOException;
 import java.util.Locale;

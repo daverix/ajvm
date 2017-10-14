@@ -1,12 +1,14 @@
 package net.daverix.ajvm.jvm;
 
 
-import net.daverix.ajvm.io.ByteCodeReader;
+import net.daverix.ajvm.Frame;
+import net.daverix.ajvm.VirtualObject;
+import net.daverix.ajvm.ByteCodeReader;
 import net.daverix.ajvm.io.ClassReference;
 import net.daverix.ajvm.io.ConstantPool;
 import net.daverix.ajvm.io.FieldReference;
 import net.daverix.ajvm.io.NameAndTypeDescriptorReference;
-import net.daverix.ajvm.io.VirtualObjectLoader;
+import net.daverix.ajvm.VirtualObjectLoader;
 
 import java.io.IOException;
 import java.util.Map;

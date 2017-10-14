@@ -20,7 +20,6 @@ package net.daverix.ajvm;
 import net.daverix.ajvm.io.ClassInfo;
 import net.daverix.ajvm.io.ClassInfoReader;
 import net.daverix.ajvm.io.ConstantPool;
-import net.daverix.ajvm.io.VirtualObjectLoader;
 import net.daverix.ajvm.jvm.AALoadOperation;
 import net.daverix.ajvm.jvm.ALoadOperation;
 import net.daverix.ajvm.jvm.AStoreOperation;
@@ -66,7 +65,6 @@ import net.daverix.ajvm.jvm.RuntimeVirtualObject;
 import net.daverix.ajvm.jvm.StringBuilderObject;
 import net.daverix.ajvm.jvm.SystemObject;
 import net.daverix.ajvm.jvm.TableSwitchOperation;
-import net.daverix.ajvm.jvm.VirtualObject;
 
 import java.io.DataInputStream;
 import java.io.File;

@@ -1,6 +1,8 @@
 package net.daverix.ajvm.jvm;
 
 
+import net.daverix.ajvm.VirtualObject;
+
 import java.io.IOException;
 
 public class StringBuilderObject implements VirtualObject {

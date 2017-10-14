@@ -16,8 +16,6 @@
  */
 package net.daverix.ajvm;
 
-import net.daverix.ajvm.io.ByteCodeReader;
-
 import java.lang.reflect.Field;
 
 /**

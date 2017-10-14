@@ -14,7 +14,7 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm.jvm
+package net.daverix.ajvm
 
 
 import java.util.*

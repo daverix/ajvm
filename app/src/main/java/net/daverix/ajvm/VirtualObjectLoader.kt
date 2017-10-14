@@ -14,9 +14,9 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm.io
+package net.daverix.ajvm
 
-import net.daverix.ajvm.jvm.VirtualObject
+import net.daverix.ajvm.VirtualObject
 
 import java.io.IOException
 
