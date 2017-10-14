@@ -34,8 +34,8 @@ class InvokeSpecialOperation(private val constantPool: ConstantPool) : ByteCodeO
         //TODO: http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.invokespecial
         // need to call super methods etc properly
         val methodReferenceIndex = reader.readUnsignedShort()
-        val methodReference = constantPool[methodReferenceIndex] as MethodReference?
-        val nameAndType = constantPool[methodReference!!.nameAndTypeIndex] as NameAndTypeDescriptorReference
+        val methodReference = constantPool[methodReferenceIndex] as MethodReference
+        val nameAndType = constantPool[methodReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
         val methodName = constantPool[nameAndType.nameIndex] as String
         val methodDescriptor = constantPool[nameAndType.descriptorIndex] as String
         val argumentCount = methodDescriptor.getArgumentCount()

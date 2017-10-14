@@ -35,19 +35,19 @@ class GetStaticOperation(private val staticClasses: MutableMap<String, VirtualOb
     override fun execute(reader: ByteCodeReader, indexOfBytecode: Int, currentFrame: Frame) {
         val staticFieldIndex = reader.readUnsignedShort()
 
-        val fieldReference = constantPool[staticFieldIndex] as FieldReference?
-        val fieldNameAndType = constantPool[fieldReference!!.nameAndTypeIndex] as NameAndTypeDescriptorReference?
-        val fieldName = constantPool[fieldNameAndType!!.nameIndex] as String?
+        val fieldReference = constantPool[staticFieldIndex] as FieldReference
+        val fieldNameAndType = constantPool[fieldReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
+        val fieldName = constantPool[fieldNameAndType.nameIndex] as String
 
-        val classReference = constantPool[fieldReference.classIndex] as ClassReference?
-        val fieldClassName = constantPool[classReference!!.nameIndex] as String?
+        val classReference = constantPool[fieldReference.classIndex] as ClassReference
+        val fieldClassName = constantPool[classReference.nameIndex] as String
 
         var staticClass: VirtualObject? = staticClasses[fieldClassName]
         if (staticClass == null) {
-            staticClass = loader.load(fieldClassName!!)
+            staticClass = loader.load(fieldClassName)
             staticClasses.put(fieldClassName, staticClass)
         }
 
-        currentFrame.push(staticClass.getFieldValue(fieldName!!)!!)
+        currentFrame.push(staticClass.getFieldValue(fieldName))
     }
 }

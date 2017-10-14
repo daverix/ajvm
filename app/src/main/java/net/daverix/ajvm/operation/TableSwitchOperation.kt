@@ -37,10 +37,7 @@ class TableSwitchOperation : ByteCodeOperation {
         }
 
         val offsetWidth = high - low + 1
-        val table = IntArray(offsetWidth)
-        for (i in 0 until offsetWidth) {
-            table[i] = reader.readInt()
-        }
+        val table = IntArray(offsetWidth) { reader.readInt() }
         val tableIndex = currentFrame.pop() as Int
         val targetAddress: Int
         if (tableIndex < low || tableIndex > high) {
