@@ -31,13 +31,9 @@ class LDCOperation(private val constantPool: ConstantPool) : ByteCodeOperation {
         val ldcIndex = reader.readUnsignedByte()
 
         val constant = constantPool[ldcIndex]
-        if (constant is Int ||
-                constant is Float ||
-                constant is String ||
-                constant is MethodHandleReference) {
-            currentFrame.push(constant)
-        } else if (constant is StringReference) {
-            currentFrame.push(constantPool[constant.index]!!)
+        when (constant) {
+            is Int, is Float, is String, is MethodHandleReference -> currentFrame.push(constant)
+            is StringReference -> currentFrame.push(constantPool[constant.index]!!)
         }
     }
 }
