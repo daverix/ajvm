@@ -16,8 +16,6 @@
  */
 package net.daverix.ajvm
 
-import net.daverix.ajvm.VirtualObject
-
 import java.io.IOException
 
 interface VirtualObjectLoader {
