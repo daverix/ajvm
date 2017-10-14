@@ -14,12 +14,7 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm.io;
+package net.daverix.ajvm.io
 
-import net.daverix.ajvm.jvm.VirtualObject;
 
-import java.io.IOException;
-
-public interface VirtualObjectLoader {
-    VirtualObject load(String qualifiedName) throws IOException;
-}
+data class StringReference(val index: Int)

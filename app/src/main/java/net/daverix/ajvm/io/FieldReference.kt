@@ -14,17 +14,8 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm.io;
+package net.daverix.ajvm.io
 
 
-public class MethodTypeReference {
-    private final int descriptorIndex;
-
-    public MethodTypeReference(int descriptorIndex) {
-        this.descriptorIndex = descriptorIndex;
-    }
-
-    public int getDescriptorIndex() {
-        return descriptorIndex;
-    }
-}
+data class FieldReference(val classIndex: Int,
+                          val nameAndTypeIndex: Int)

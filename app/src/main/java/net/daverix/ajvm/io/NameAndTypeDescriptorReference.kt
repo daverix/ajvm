@@ -14,17 +14,8 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm.io;
+package net.daverix.ajvm.io
 
 
-public class StringReference {
-    private final int index;
-
-    public StringReference(int index) {
-        this.index = index;
-    }
-
-    public int getIndex() {
-        return index;
-    }
-}
+data class NameAndTypeDescriptorReference(val nameIndex: Int,
+                                          val descriptorIndex: Int)

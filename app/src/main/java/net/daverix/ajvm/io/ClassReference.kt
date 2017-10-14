@@ -14,19 +14,7 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm.jvm;
+package net.daverix.ajvm.io
 
 
-import java.io.IOException;
-
-public interface VirtualObject {
-    void initialize(Object[] args);
-
-    String getName();
-
-    void setFieldValue(String fieldName, Object value);
-
-    Object getFieldValue(String fieldName);
-
-    Object invokeMethod(String name, String descriptor, Object[] args) throws IOException;
-}
+data class ClassReference(val nameIndex: Int)

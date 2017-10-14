@@ -2,28 +2,28 @@ package net.daverix.ajvm.jvm;
 
 
 import net.daverix.ajvm.io.ByteCodeReader;
+import net.daverix.ajvm.io.ConstantPool;
 import net.daverix.ajvm.io.MethodReference;
 import net.daverix.ajvm.io.NameAndTypeDescriptorReference;
 
 import java.io.IOException;
-import java.util.Stack;
 
 import static net.daverix.ajvm.jvm.MethodUtils.getArgumentCount;
 
 public class InvokeVirtualOperation implements ByteCodeOperation {
-    private final Object[] constantPool;
+    private final ConstantPool constantPool;
 
-    public InvokeVirtualOperation(Object[] constantPool) {
+    public InvokeVirtualOperation(ConstantPool constantPool) {
         this.constantPool = constantPool;
     }
 
     @Override
     public void execute(ByteCodeReader reader, int indexOfBytecode, Frame currentFrame) throws IOException {
         int methodReferenceIndex = reader.readUnsignedShort();
-        MethodReference methodReference = (MethodReference) constantPool[methodReferenceIndex];
-        NameAndTypeDescriptorReference nameAndType = (NameAndTypeDescriptorReference) constantPool[methodReference.getNameAndTypeIndex()];
-        String methodName = (String) constantPool[nameAndType.getNameIndex()];
-        String methodDescriptor = (String) constantPool[nameAndType.getDescriptorIndex()];
+        MethodReference methodReference = (MethodReference) constantPool.get(methodReferenceIndex);
+        NameAndTypeDescriptorReference nameAndType = (NameAndTypeDescriptorReference) constantPool.get(methodReference.getNameAndTypeIndex());
+        String methodName = (String) constantPool.get(nameAndType.getNameIndex());
+        String methodDescriptor = (String) constantPool.get(nameAndType.getDescriptorIndex());
         int argumentCount = getArgumentCount(methodDescriptor);
 
         Object[] methodArgs = new Object[argumentCount];

@@ -21,19 +21,18 @@ import net.daverix.ajvm.Opcodes;
 import net.daverix.ajvm.io.ByteCodeReader;
 import net.daverix.ajvm.io.ClassInfo;
 import net.daverix.ajvm.io.CodeAttribute;
+import net.daverix.ajvm.io.ConstantPool;
 import net.daverix.ajvm.io.MethodInfo;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static net.daverix.ajvm.io.CodeAttribute.fromMethod;
-
 public class RuntimeVirtualObject implements VirtualObject {
 
     private final Map<String, Object> fieldValues = new HashMap<>();
     private final ClassInfo classInfo;
-    private final Object[] constantPool;
+    private final ConstantPool constantPool;
     private final Map<Integer, ByteCodeOperation> byteCodeOperations;
 
     public RuntimeVirtualObject(ClassInfo classInfo, Map<Integer, ByteCodeOperation> byteCodeOperations) {
@@ -49,7 +48,7 @@ public class RuntimeVirtualObject implements VirtualObject {
 
     @Override
     public String getName() {
-        return (String) constantPool[classInfo.getClassIndex()];
+        return (String) constantPool.get(classInfo.getClassIndex());
     }
 
     @Override
@@ -68,7 +67,7 @@ public class RuntimeVirtualObject implements VirtualObject {
         if (method == null)
             throw new IllegalArgumentException("Cannot find method with name " + name + " and descriptor " + descriptor);
 
-        CodeAttribute codeAttribute = fromMethod(method, constantPool);
+        CodeAttribute codeAttribute = method.getCodeAttribute();
         ByteCodeReader reader = new ByteCodeReader(codeAttribute.getCode());
 
         Frame currentFrame = new Frame(
@@ -101,8 +100,8 @@ public class RuntimeVirtualObject implements VirtualObject {
     private MethodInfo getMethodByNameAndDescriptor(String methodName, String descriptor) {
         MethodInfo[] methods = classInfo.getMethods();
         for (MethodInfo method : methods) {
-            String constantName = (String) constantPool[method.getNameIndex()];
-            String constantDescriptor = (String) constantPool[method.getDescriptorIndex()];
+            String constantName = (String) constantPool.get(method.getNameIndex());
+            String constantDescriptor = (String) constantPool.get(method.getDescriptorIndex());
 
             if (methodName.equals(constantName) && descriptor.equals(constantDescriptor)) {
                 return method;

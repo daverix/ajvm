@@ -19,6 +19,7 @@ package net.daverix.ajvm;
 
 import net.daverix.ajvm.io.ClassInfo;
 import net.daverix.ajvm.io.ClassInfoReader;
+import net.daverix.ajvm.io.ConstantPool;
 import net.daverix.ajvm.io.VirtualObjectLoader;
 import net.daverix.ajvm.jvm.AALoadOperation;
 import net.daverix.ajvm.jvm.ALoadOperation;
@@ -108,7 +109,7 @@ public class TestObjectLoader implements VirtualObjectLoader {
         try(ClassInfoReader reader = new ClassInfoReader(new DataInputStream(new FileInputStream(file)))) {
             classInfo = reader.read();
         }
-        Object[] constantPool = classInfo.getConstantPool();
+        ConstantPool constantPool = classInfo.getConstantPool();
 
         Map<Integer, ByteCodeOperation> byteCodeOperations = new HashMap<>();
         byteCodeOperations.put(Opcodes.NEW, new NewOperation(this, constantPool));

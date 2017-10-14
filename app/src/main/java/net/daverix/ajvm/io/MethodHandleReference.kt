@@ -14,14 +14,8 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm.io;
+package net.daverix.ajvm.io
 
 
-import java.io.DataInputStream;
-
-public class Exception {
-
-    public static Exception read(DataInputStream stream) {
-        return null;
-    }
-}
+data class MethodHandleReference(val referenceKind: Int,
+                                 val referenceIndex: Int)

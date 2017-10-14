@@ -2,16 +2,16 @@ package net.daverix.ajvm.jvm;
 
 
 import net.daverix.ajvm.io.ByteCodeReader;
+import net.daverix.ajvm.io.ConstantPool;
 import net.daverix.ajvm.io.MethodHandleReference;
 import net.daverix.ajvm.io.StringReference;
 
 import java.io.IOException;
-import java.util.Stack;
 
 public class LDCOperation implements ByteCodeOperation {
-    private final Object[] constantPool;
+    private final ConstantPool constantPool;
 
-    public LDCOperation(Object[] constantPool) {
+    public LDCOperation(ConstantPool constantPool) {
         this.constantPool = constantPool;
     }
 
@@ -19,14 +19,14 @@ public class LDCOperation implements ByteCodeOperation {
     public void execute(ByteCodeReader reader, int indexOfBytecode, Frame currentFrame) throws IOException {
         int ldcIndex = reader.readUnsignedByte();
 
-        Object constant = constantPool[ldcIndex];
+        Object constant = constantPool.get(ldcIndex);
         if (constant instanceof Integer ||
                 constant instanceof Float ||
                 constant instanceof String ||
                 constant instanceof MethodHandleReference) {
             currentFrame.push(constant);
         } else if (constant instanceof StringReference) {
-            currentFrame.push(constantPool[((StringReference) constant).getIndex()]);
+            currentFrame.push(constantPool.get(((StringReference) constant).getIndex()));
         }
     }
 }

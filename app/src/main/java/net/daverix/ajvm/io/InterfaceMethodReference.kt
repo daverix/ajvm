@@ -14,17 +14,7 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm.io;
+package net.daverix.ajvm.io
 
-
-public class ClassReference {
-    private final int nameIndex;
-
-    public ClassReference(int nameIndex) {
-        this.nameIndex = nameIndex;
-    }
-
-    public int getNameIndex() {
-        return nameIndex;
-    }
-}
+data class InterfaceMethodReference(val classIndex: Int,
+                                    val nameAndTypeIndex: Int)

@@ -2,18 +2,18 @@ package net.daverix.ajvm.jvm;
 
 
 import net.daverix.ajvm.io.ByteCodeReader;
+import net.daverix.ajvm.io.ConstantPool;
 import net.daverix.ajvm.io.MethodReference;
 import net.daverix.ajvm.io.NameAndTypeDescriptorReference;
 
 import java.io.IOException;
-import java.util.Stack;
 
 import static net.daverix.ajvm.jvm.MethodUtils.getArgumentCount;
 
 public class InvokeSpecialOperation implements ByteCodeOperation {
-    private final Object[] constantPool;
+    private final ConstantPool constantPool;
 
-    public InvokeSpecialOperation(Object[] constantPool) {
+    public InvokeSpecialOperation(ConstantPool constantPool) {
         this.constantPool = constantPool;
     }
 
@@ -22,10 +22,10 @@ public class InvokeSpecialOperation implements ByteCodeOperation {
         //TODO: http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.invokespecial
         // need to call super methods etc properly
         int methodReferenceIndex = reader.readUnsignedShort();
-        MethodReference methodReference = (MethodReference) constantPool[methodReferenceIndex];
-        NameAndTypeDescriptorReference nameAndType = (NameAndTypeDescriptorReference) constantPool[methodReference.getNameAndTypeIndex()];
-        String methodName = (String) constantPool[nameAndType.getNameIndex()];
-        String methodDescriptor = (String) constantPool[nameAndType.getDescriptorIndex()];
+        MethodReference methodReference = (MethodReference) constantPool.get(methodReferenceIndex);
+        NameAndTypeDescriptorReference nameAndType = (NameAndTypeDescriptorReference) constantPool.get(methodReference.getNameAndTypeIndex());
+        String methodName = (String) constantPool.get(nameAndType.getNameIndex());
+        String methodDescriptor = (String) constantPool.get(nameAndType.getDescriptorIndex());
         int argumentCount = getArgumentCount(methodDescriptor);
 
         Object[] methodArgs = new Object[argumentCount];

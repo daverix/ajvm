@@ -14,23 +14,20 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm.io;
+package net.daverix.ajvm.jvm
 
 
-public class NameAndTypeDescriptorReference {
-    private final int nameIndex;
-    private final int descriptorIndex;
+import java.io.IOException
 
-    public NameAndTypeDescriptorReference(int nameIndex, int descriptorIndex) {
-        this.nameIndex = nameIndex;
-        this.descriptorIndex = descriptorIndex;
-    }
+interface VirtualObject {
+    val name: String
 
-    public int getNameIndex() {
-        return nameIndex;
-    }
+    fun initialize(args: Array<Any>)
 
-    public int getDescriptorIndex() {
-        return descriptorIndex;
-    }
+    fun setFieldValue(fieldName: String, value: Any?)
+
+    fun getFieldValue(fieldName: String): Any?
+
+    @Throws(IOException::class)
+    fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any?
 }

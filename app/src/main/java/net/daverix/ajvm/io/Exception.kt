@@ -14,31 +14,13 @@
 
     You should have received a copy of the GNU General Public License
  */
-package net.daverix.ajvm.io;
+package net.daverix.ajvm.io
 
 
-public class MethodReference {
-    private final int classIndex;
-    private final int nameAndTypeIndex;
+import java.io.DataInputStream
 
-    public MethodReference(int classIndex, int nameAndTypeIndex) {
-        this.classIndex = classIndex;
-        this.nameAndTypeIndex = nameAndTypeIndex;
-    }
+class Exception
 
-    public int getClassIndex() {
-        return classIndex;
-    }
-
-    public int getNameAndTypeIndex() {
-        return nameAndTypeIndex;
-    }
-
-    @Override
-    public String toString() {
-        return "MethodReference{" +
-                "classIndex=" + classIndex +
-                ", nameAndTypeIndex=" + nameAndTypeIndex +
-                '}';
-    }
+fun DataInputStream.readException(): Exception {
+    return Exception()
 }
