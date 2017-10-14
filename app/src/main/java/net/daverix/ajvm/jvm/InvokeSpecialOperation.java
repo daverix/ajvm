@@ -10,7 +10,8 @@ import net.daverix.ajvm.io.NameAndTypeDescriptorReference;
 
 import java.io.IOException;
 
-import static net.daverix.ajvm.MethodUtils.getArgumentCount;
+import static net.daverix.ajvm.MethodUtilsKt.getArgumentCount;
+
 
 public class InvokeSpecialOperation implements ByteCodeOperation {
     private final ConstantPool constantPool;
