@@ -21,7 +21,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -36,14 +35,14 @@ public class HelloWorldTest {
     @Before
     public void setUp() throws IOException {
         //System.out.println(new File("./").getAbsolutePath());
-        File dir = new File("app/build/intermediates/classes/test/debug/");
 
         HashMap<String, VirtualObject> staticClasses = new HashMap<>();
         outputStream = new ByteArrayOutputStream();
         errStream = new ByteArrayOutputStream();
 
-        VirtualObjectLoader testClassLoader = new TestObjectLoader(staticClasses,
-                dir,
+        ClassInfoProvider classInfoProvider = new FileSystemClassInfoProvider("app/build/intermediates/classes/test/debug/");
+        VirtualObjectLoader testClassLoader = new ApplicationObjectLoader(classInfoProvider,
+                staticClasses,
                 new PrintStreamObject(new PrintStream(outputStream)),
                 new PrintStreamObject(new PrintStream(errStream)));
         sut = testClassLoader.load("net/daverix/ajvm/HelloWorld");
