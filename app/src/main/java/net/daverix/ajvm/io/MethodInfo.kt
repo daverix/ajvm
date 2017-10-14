@@ -17,7 +17,7 @@
 package net.daverix.ajvm.io
 
 
-import net.daverix.ajvm.util.containsFlag
+import net.daverix.ajvm.containsFlag
 import java.io.DataInputStream
 import java.io.IOException
 

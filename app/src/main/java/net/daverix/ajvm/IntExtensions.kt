@@ -1,4 +1,4 @@
-package net.daverix.ajvm.util
+package net.daverix.ajvm
 
 
 infix fun Int.containsFlag(flag: Int): Boolean {
