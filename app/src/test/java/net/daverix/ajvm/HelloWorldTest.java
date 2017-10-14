@@ -17,8 +17,6 @@
 package net.daverix.ajvm;
 
 
-import net.daverix.ajvm.jvm.PrintStreamObject;
-
 import org.junit.Before;
 import org.junit.Test;
 
