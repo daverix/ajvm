@@ -21,6 +21,7 @@ import net.daverix.ajvm.io.ClassInfo;
 import net.daverix.ajvm.io.ClassInfoReader;
 import net.daverix.ajvm.io.VirtualObjectLoader;
 import net.daverix.ajvm.jvm.AALoadOperation;
+import net.daverix.ajvm.jvm.ALoadOperation;
 import net.daverix.ajvm.jvm.AStoreOperation;
 import net.daverix.ajvm.jvm.ByteCodeOperation;
 import net.daverix.ajvm.jvm.DLoadOperation;
