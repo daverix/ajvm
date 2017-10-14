@@ -76,7 +76,7 @@ class ClassInfoReader(private val stream: DataInputStream) : Closeable {
     @Throws(IOException::class)
     private fun readConstantPool(): ConstantPool {
         val constantPoolCount = stream.readUnsignedShort()
-        val constantPool = ConstantPool()
+        val constantPool = arrayOfNulls<Any?>(constantPoolCount)
         var i = 1
         while (i < constantPoolCount) {
             val tag = stream.readUnsignedByte()

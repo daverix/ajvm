@@ -28,13 +28,15 @@ data class ClassInfo(val majorVersion: Int,
                      val fields: Array<FieldInfo>,
                      val methods: Array<MethodInfo>,
                      val attributes: Array<AttributeInfo>) {
+
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is ClassInfo) return false
 
         if (majorVersion != other.majorVersion) return false
         if (minorVersion != other.minorVersion) return false
-        if (constantPool != other.constantPool) return false
+        if (!Arrays.equals(constantPool, other.constantPool)) return false
         if (accessFlags != other.accessFlags) return false
         if (classIndex != other.classIndex) return false
         if (superClassIndex != other.superClassIndex) return false
@@ -49,7 +51,7 @@ data class ClassInfo(val majorVersion: Int,
     override fun hashCode(): Int {
         var result = majorVersion
         result = 31 * result + minorVersion
-        result = 31 * result + constantPool.hashCode()
+        result = 31 * result + Arrays.hashCode(constantPool)
         result = 31 * result + accessFlags
         result = 31 * result + classIndex
         result = 31 * result + superClassIndex
