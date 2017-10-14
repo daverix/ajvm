@@ -22,20 +22,20 @@ import java.util.*
 class Frame(maxLocals: Int,
             private val maxStackDepth: Int) {
     private val localVariables: Array<Any?> = arrayOfNulls(maxLocals)
-    private val operandStack = Stack<Any>()
+    private val operandStack = Stack<Any?>()
 
-    fun push(item: Any) {
+    fun push(item: Any?) {
         if (operandStack.size == maxStackDepth)
             throw StackOverflowError("can't push object onto stack, max stack depth $maxStackDepth reached")
 
         operandStack.push(item)
     }
 
-    fun pop(): Any {
+    fun pop(): Any? {
         return operandStack.pop()
     }
 
-    fun setLocalVariable(index: Int, value: Any) {
+    fun setLocalVariable(index: Int, value: Any?) {
         localVariables[index] = value
     }
 
@@ -43,7 +43,7 @@ class Frame(maxLocals: Int,
         return localVariables[index]
     }
 
-    fun peek(): Any {
+    fun peek(): Any? {
         return operandStack.peek()
     }
 }
