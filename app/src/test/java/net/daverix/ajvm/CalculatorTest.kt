@@ -26,9 +26,9 @@ import java.io.PrintStream
 import java.util.*
 
 class CalculatorTest {
-    private var outputStream: ByteArrayOutputStream? = null
-    private var errStream: ByteArrayOutputStream? = null
-    private var sut: VirtualObject? = null
+    private lateinit var outputStream: ByteArrayOutputStream
+    private lateinit var errStream: ByteArrayOutputStream
+    private lateinit var sut: VirtualObject
 
     @Before
     @Throws(IOException::class)
@@ -40,8 +40,8 @@ class CalculatorTest {
         val classInfoProvider = FileSystemClassInfoProvider("app/build/intermediates/classes/test/debug/")
         val testClassLoader = ApplicationObjectLoader(classInfoProvider,
                 staticClasses,
-                PrintStreamObject(PrintStream(outputStream!!)),
-                PrintStreamObject(PrintStream(errStream!!)))
+                PrintStreamObject(PrintStream(outputStream)),
+                PrintStreamObject(PrintStream(errStream)))
         sut = testClassLoader.load("net/daverix/ajvm/Calculator")
     }
 
@@ -51,7 +51,7 @@ class CalculatorTest {
         invokeCalculator("1 + 2")
 
         //Note! We call println so the string ends with \n
-        assertThat(String(outputStream!!.toByteArray())).isEqualTo("3\n")
+        assertThat(String(outputStream.toByteArray())).isEqualTo("3\n")
     }
 
     @Test
@@ -60,7 +60,7 @@ class CalculatorTest {
         invokeCalculator("3 - 2")
 
         //Note! We call println so the string ends with \n
-        assertThat(String(outputStream!!.toByteArray())).isEqualTo("1\n")
+        assertThat(String(outputStream.toByteArray())).isEqualTo("1\n")
     }
 
     @Test
@@ -69,7 +69,7 @@ class CalculatorTest {
         invokeCalculator("6 / 2")
 
         //Note! We call println so the string ends with \n
-        assertThat(String(outputStream!!.toByteArray())).isEqualTo("3\n")
+        assertThat(String(outputStream.toByteArray())).isEqualTo("3\n")
     }
 
     @Test
@@ -78,7 +78,7 @@ class CalculatorTest {
         invokeCalculator("2 * 3")
 
         //Note! We call println so the string ends with \n
-        assertThat(String(outputStream!!.toByteArray())).isEqualTo("6\n")
+        assertThat(String(outputStream.toByteArray())).isEqualTo("6\n")
     }
 
     @Test
@@ -87,7 +87,7 @@ class CalculatorTest {
         invokeCalculator("5 % 2")
 
         //Note! We call println so the string ends with \n
-        assertThat(String(outputStream!!.toByteArray())).isEqualTo("1\n")
+        assertThat(String(outputStream.toByteArray())).isEqualTo("1\n")
     }
 
     @Test
@@ -96,12 +96,12 @@ class CalculatorTest {
         invokeCalculator("5 ? 2")
 
         //Note! We call println so the string ends with \n
-        assertThat(String(errStream!!.toByteArray())).isEqualTo("Unknown operator ?\n")
+        assertThat(String(errStream.toByteArray())).isEqualTo("Unknown operator ?\n")
     }
 
     @Throws(IOException::class)
     private fun invokeCalculator(args: String) {
-        sut!!.invokeMethod("main", "([Ljava/lang/String;)V",
+        sut.invokeMethod("main", "([Ljava/lang/String;)V",
                 arrayOf(args.split(" ").toTypedArray()))
     }
 }

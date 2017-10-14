@@ -26,9 +26,9 @@ import java.io.PrintStream
 import java.util.*
 
 class HelloWorldTest {
-    private var outputStream: ByteArrayOutputStream? = null
-    private var errStream: ByteArrayOutputStream? = null
-    private var sut: VirtualObject? = null
+    private lateinit var outputStream: ByteArrayOutputStream
+    private lateinit var errStream: ByteArrayOutputStream
+    private lateinit var sut: VirtualObject
 
     @Before
     @Throws(IOException::class)
@@ -42,17 +42,17 @@ class HelloWorldTest {
         val classInfoProvider = FileSystemClassInfoProvider("app/build/intermediates/classes/test/debug/")
         val testClassLoader = ApplicationObjectLoader(classInfoProvider,
                 staticClasses,
-                PrintStreamObject(PrintStream(outputStream!!)),
-                PrintStreamObject(PrintStream(errStream!!)))
+                PrintStreamObject(PrintStream(outputStream)),
+                PrintStreamObject(PrintStream(errStream)))
         sut = testClassLoader.load("net/daverix/ajvm/HelloWorld")
     }
 
     @Test
     @Throws(IOException::class)
     fun run() {
-        sut!!.invokeMethod("main", "([Ljava/lang/String;)V", arrayOf(arrayOf("World")))
+        sut.invokeMethod("main", "([Ljava/lang/String;)V", arrayOf(arrayOf("World")))
 
         //Note! We call println so the string ends with \n
-        assertThat(String(outputStream!!.toByteArray())).isEqualTo("Hello World!\n")
+        assertThat(String(outputStream.toByteArray())).isEqualTo("Hello World!\n")
     }
 }
