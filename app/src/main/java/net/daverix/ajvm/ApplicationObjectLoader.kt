@@ -17,14 +17,15 @@
 package net.daverix.ajvm
 
 
+import android.annotation.SuppressLint
 import net.daverix.ajvm.operation.*
 import java.io.IOException
-import java.util.*
 
 class ApplicationObjectLoader(private val classInfoProvider: ClassInfoProvider,
                               private val staticClasses: MutableMap<String, VirtualObject>,
                               private val outStream: PrintStreamObject,
                               private val errStream: PrintStreamObject) : VirtualObjectLoader {
+    @SuppressLint("UseSparseArrays")
     @Throws(IOException::class)
     override fun load(qualifiedName: String): VirtualObject {
         when (qualifiedName) {
@@ -33,90 +34,90 @@ class ApplicationObjectLoader(private val classInfoProvider: ClassInfoProvider,
             "java/lang/Integer" -> return IntegerObject()
             else -> {
                 val classInfo = classInfoProvider.getClassInfo(qualifiedName)
-                val byteCodeOperations = HashMap<Int, ByteCodeOperation>()
-
-                byteCodeOperations.put(Opcodes.NEW, NewOperation(this, classInfo.constantPool))
-                byteCodeOperations.put(Opcodes.DUP, DupOperation())
-                byteCodeOperations.put(Opcodes.LDC, LDCOperation(classInfo.constantPool))
-                byteCodeOperations.put(Opcodes.GETSTATIC, GetStaticOperation(staticClasses, this, classInfo.constantPool))
-                byteCodeOperations.put(Opcodes.INVOKEVIRTUAL, InvokeVirtualOperation(classInfo.constantPool))
-                byteCodeOperations.put(Opcodes.INVOKESPECIAL, InvokeSpecialOperation(classInfo.constantPool))
-                byteCodeOperations.put(Opcodes.INVOKESTATIC, InvokeStaticOperation(staticClasses, this, classInfo.constantPool))
-                byteCodeOperations.put(Opcodes.ICONST_M1, PushConstOperation(-1))
-                byteCodeOperations.put(Opcodes.ICONST_0, PushConstOperation(0))
-                byteCodeOperations.put(Opcodes.LCONST_0, PushConstOperation(0L))
-                byteCodeOperations.put(Opcodes.DCONST_0, PushConstOperation(0.0))
-                byteCodeOperations.put(Opcodes.FCONST_0, PushConstOperation(0f))
-                byteCodeOperations.put(Opcodes.ICONST_1, PushConstOperation(1))
-                byteCodeOperations.put(Opcodes.LCONST_1, PushConstOperation(1L))
-                byteCodeOperations.put(Opcodes.DCONST_1, PushConstOperation(1.0))
-                byteCodeOperations.put(Opcodes.FCONST_1, PushConstOperation(1f))
-                byteCodeOperations.put(Opcodes.ICONST_2, PushConstOperation(2))
-                byteCodeOperations.put(Opcodes.FCONST_2, PushConstOperation(2f))
-                byteCodeOperations.put(Opcodes.ICONST_3, PushConstOperation(3))
-                byteCodeOperations.put(Opcodes.ICONST_4, PushConstOperation(4))
-                byteCodeOperations.put(Opcodes.ICONST_5, PushConstOperation(5))
-                byteCodeOperations.put(Opcodes.ASTORE_0, IndexedAStoreOperation(0))
-                byteCodeOperations.put(Opcodes.ISTORE_0, IndexedIStoreOperation(0))
-                byteCodeOperations.put(Opcodes.LSTORE_0, IndexedLStoreOperation(0))
-                byteCodeOperations.put(Opcodes.DSTORE_0, IndexedDStoreOperation(0))
-                byteCodeOperations.put(Opcodes.FSTORE_0, IndexedFStoreOperation(0))
-                byteCodeOperations.put(Opcodes.ASTORE_1, IndexedAStoreOperation(1))
-                byteCodeOperations.put(Opcodes.ISTORE_1, IndexedIStoreOperation(1))
-                byteCodeOperations.put(Opcodes.LSTORE_1, IndexedLStoreOperation(1))
-                byteCodeOperations.put(Opcodes.DSTORE_1, IndexedDStoreOperation(1))
-                byteCodeOperations.put(Opcodes.FSTORE_1, IndexedFStoreOperation(1))
-                byteCodeOperations.put(Opcodes.ASTORE_2, IndexedAStoreOperation(2))
-                byteCodeOperations.put(Opcodes.ISTORE_2, IndexedIStoreOperation(2))
-                byteCodeOperations.put(Opcodes.LSTORE_2, IndexedLStoreOperation(2))
-                byteCodeOperations.put(Opcodes.DSTORE_2, IndexedDStoreOperation(2))
-                byteCodeOperations.put(Opcodes.FSTORE_2, IndexedFStoreOperation(2))
-                byteCodeOperations.put(Opcodes.ASTORE_3, IndexedAStoreOperation(3))
-                byteCodeOperations.put(Opcodes.ISTORE_3, IndexedIStoreOperation(3))
-                byteCodeOperations.put(Opcodes.LSTORE_3, IndexedLStoreOperation(3))
-                byteCodeOperations.put(Opcodes.DSTORE_3, IndexedDStoreOperation(3))
-                byteCodeOperations.put(Opcodes.FSTORE_3, IndexedFStoreOperation(3))
-                byteCodeOperations.put(Opcodes.ASTORE, AStoreOperation())
-                byteCodeOperations.put(Opcodes.ISTORE, IStoreOperation())
-                byteCodeOperations.put(Opcodes.LSTORE, LStoreOperation())
-                byteCodeOperations.put(Opcodes.DSTORE, DStoreOperation())
-                byteCodeOperations.put(Opcodes.FSTORE, FStoreOperation())
-                byteCodeOperations.put(Opcodes.ALOAD_0, IndexedALoadOperation(0))
-                byteCodeOperations.put(Opcodes.ILOAD_0, IndexedILoadOperation(0))
-                byteCodeOperations.put(Opcodes.LLOAD_0, IndexedLLoadOperation(0))
-                byteCodeOperations.put(Opcodes.DLOAD_0, IndexedDLoadOperation(0))
-                byteCodeOperations.put(Opcodes.FLOAD_0, IndexedFLoadOperation(0))
-                byteCodeOperations.put(Opcodes.ALOAD_1, IndexedALoadOperation(1))
-                byteCodeOperations.put(Opcodes.ILOAD_1, IndexedILoadOperation(1))
-                byteCodeOperations.put(Opcodes.LLOAD_1, IndexedLLoadOperation(1))
-                byteCodeOperations.put(Opcodes.DLOAD_1, IndexedDLoadOperation(1))
-                byteCodeOperations.put(Opcodes.FLOAD_1, IndexedFLoadOperation(1))
-                byteCodeOperations.put(Opcodes.ALOAD_2, IndexedALoadOperation(2))
-                byteCodeOperations.put(Opcodes.ILOAD_2, IndexedILoadOperation(2))
-                byteCodeOperations.put(Opcodes.LLOAD_2, IndexedLLoadOperation(2))
-                byteCodeOperations.put(Opcodes.DLOAD_2, IndexedDLoadOperation(2))
-                byteCodeOperations.put(Opcodes.FLOAD_2, IndexedFLoadOperation(2))
-                byteCodeOperations.put(Opcodes.ALOAD_3, IndexedALoadOperation(3))
-                byteCodeOperations.put(Opcodes.ILOAD_3, IndexedILoadOperation(3))
-                byteCodeOperations.put(Opcodes.LLOAD_3, IndexedLLoadOperation(3))
-                byteCodeOperations.put(Opcodes.DLOAD_3, IndexedDLoadOperation(3))
-                byteCodeOperations.put(Opcodes.FLOAD_3, IndexedFLoadOperation(3))
-                byteCodeOperations.put(Opcodes.ALOAD, ALoadOperation())
-                byteCodeOperations.put(Opcodes.ILOAD, ILoadOperation())
-                byteCodeOperations.put(Opcodes.LLOAD, LLoadOperation())
-                byteCodeOperations.put(Opcodes.DLOAD, DLoadOperation())
-                byteCodeOperations.put(Opcodes.FLOAD, FLoadOperation())
-                byteCodeOperations.put(Opcodes.AALOAD, AALoadOperation())
-                byteCodeOperations.put(Opcodes.IADD, IAddOperation())
-                byteCodeOperations.put(Opcodes.ISUB, ISubOperation())
-                byteCodeOperations.put(Opcodes.IMUL, IMulOperation())
-                byteCodeOperations.put(Opcodes.IDIV, IDivOperation())
-                byteCodeOperations.put(Opcodes.IREM, IRemOperation())
-                byteCodeOperations.put(Opcodes.TABLESWITCH, TableSwitchOperation())
-                byteCodeOperations.put(Opcodes.IFEQ, IfEqOperation())
-                byteCodeOperations.put(Opcodes.GOTO, GotoOperation())
-                byteCodeOperations.put(Opcodes.NOP, NoOperation())
-                byteCodeOperations.put(Opcodes.L2I, L2IOperation())
+                val byteCodeOperations = mapOf(
+                    Opcodes.NEW to NewOperation(this@ApplicationObjectLoader, classInfo.constantPool),
+                    Opcodes.DUP to DupOperation(),
+                    Opcodes.LDC to LDCOperation(classInfo.constantPool),
+                    Opcodes.GETSTATIC to GetStaticOperation(staticClasses, this@ApplicationObjectLoader, classInfo.constantPool),
+                    Opcodes.INVOKEVIRTUAL to InvokeVirtualOperation(classInfo.constantPool),
+                    Opcodes.INVOKESPECIAL to InvokeSpecialOperation(classInfo.constantPool),
+                    Opcodes.INVOKESTATIC to InvokeStaticOperation(staticClasses, this@ApplicationObjectLoader, classInfo.constantPool),
+                    Opcodes.ICONST_M1 to PushConstOperation(-1),
+                    Opcodes.ICONST_0 to PushConstOperation(0),
+                    Opcodes.LCONST_0 to PushConstOperation(0L),
+                    Opcodes.DCONST_0 to PushConstOperation(0.0),
+                    Opcodes.FCONST_0 to PushConstOperation(0f),
+                    Opcodes.ICONST_1 to PushConstOperation(1),
+                    Opcodes.LCONST_1 to PushConstOperation(1L),
+                    Opcodes.DCONST_1 to PushConstOperation(1.0),
+                    Opcodes.FCONST_1 to PushConstOperation(1f),
+                    Opcodes.ICONST_2 to PushConstOperation(2),
+                    Opcodes.FCONST_2 to PushConstOperation(2f),
+                    Opcodes.ICONST_3 to PushConstOperation(3),
+                    Opcodes.ICONST_4 to PushConstOperation(4),
+                    Opcodes.ICONST_5 to PushConstOperation(5),
+                    Opcodes.ASTORE_0 to IndexedAStoreOperation(0),
+                    Opcodes.ISTORE_0 to IndexedIStoreOperation(0),
+                    Opcodes.LSTORE_0 to IndexedLStoreOperation(0),
+                    Opcodes.DSTORE_0 to IndexedDStoreOperation(0),
+                    Opcodes.FSTORE_0 to IndexedFStoreOperation(0),
+                    Opcodes.ASTORE_1 to IndexedAStoreOperation(1),
+                    Opcodes.ISTORE_1 to IndexedIStoreOperation(1),
+                    Opcodes.LSTORE_1 to IndexedLStoreOperation(1),
+                    Opcodes.DSTORE_1 to IndexedDStoreOperation(1),
+                    Opcodes.FSTORE_1 to IndexedFStoreOperation(1),
+                    Opcodes.ASTORE_2 to IndexedAStoreOperation(2),
+                    Opcodes.ISTORE_2 to IndexedIStoreOperation(2),
+                    Opcodes.LSTORE_2 to IndexedLStoreOperation(2),
+                    Opcodes.DSTORE_2 to IndexedDStoreOperation(2),
+                    Opcodes.FSTORE_2 to IndexedFStoreOperation(2),
+                    Opcodes.ASTORE_3 to IndexedAStoreOperation(3),
+                    Opcodes.ISTORE_3 to IndexedIStoreOperation(3),
+                    Opcodes.LSTORE_3 to IndexedLStoreOperation(3),
+                    Opcodes.DSTORE_3 to IndexedDStoreOperation(3),
+                    Opcodes.FSTORE_3 to IndexedFStoreOperation(3),
+                    Opcodes.ASTORE to AStoreOperation(),
+                    Opcodes.ISTORE to IStoreOperation(),
+                    Opcodes.LSTORE to LStoreOperation(),
+                    Opcodes.DSTORE to DStoreOperation(),
+                    Opcodes.FSTORE to FStoreOperation(),
+                    Opcodes.ALOAD_0 to IndexedALoadOperation(0),
+                    Opcodes.ILOAD_0 to IndexedILoadOperation(0),
+                    Opcodes.LLOAD_0 to IndexedLLoadOperation(0),
+                    Opcodes.DLOAD_0 to IndexedDLoadOperation(0),
+                    Opcodes.FLOAD_0 to IndexedFLoadOperation(0),
+                    Opcodes.ALOAD_1 to IndexedALoadOperation(1),
+                    Opcodes.ILOAD_1 to IndexedILoadOperation(1),
+                    Opcodes.LLOAD_1 to IndexedLLoadOperation(1),
+                    Opcodes.DLOAD_1 to IndexedDLoadOperation(1),
+                    Opcodes.FLOAD_1 to IndexedFLoadOperation(1),
+                    Opcodes.ALOAD_2 to IndexedALoadOperation(2),
+                    Opcodes.ILOAD_2 to IndexedILoadOperation(2),
+                    Opcodes.LLOAD_2 to IndexedLLoadOperation(2),
+                    Opcodes.DLOAD_2 to IndexedDLoadOperation(2),
+                    Opcodes.FLOAD_2 to IndexedFLoadOperation(2),
+                    Opcodes.ALOAD_3 to IndexedALoadOperation(3),
+                    Opcodes.ILOAD_3 to IndexedILoadOperation(3),
+                    Opcodes.LLOAD_3 to IndexedLLoadOperation(3),
+                    Opcodes.DLOAD_3 to IndexedDLoadOperation(3),
+                    Opcodes.FLOAD_3 to IndexedFLoadOperation(3),
+                    Opcodes.ALOAD to ALoadOperation(),
+                    Opcodes.ILOAD to ILoadOperation(),
+                    Opcodes.LLOAD to LLoadOperation(),
+                    Opcodes.DLOAD to DLoadOperation(),
+                    Opcodes.FLOAD to FLoadOperation(),
+                    Opcodes.AALOAD to AALoadOperation(),
+                    Opcodes.IADD to IAddOperation(),
+                    Opcodes.ISUB to ISubOperation(),
+                    Opcodes.IMUL to IMulOperation(),
+                    Opcodes.IDIV to IDivOperation(),
+                    Opcodes.IREM to IRemOperation(),
+                    Opcodes.TABLESWITCH to TableSwitchOperation(),
+                    Opcodes.IFEQ to IfEqOperation(),
+                    Opcodes.GOTO to GotoOperation(),
+                    Opcodes.NOP to NoOperation(),
+                    Opcodes.L2I to L2IOperation()
+                )
 
                 return RuntimeVirtualObject(classInfo, byteCodeOperations)
             }
