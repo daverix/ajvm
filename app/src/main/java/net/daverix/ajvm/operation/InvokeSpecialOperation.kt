@@ -17,10 +17,7 @@
 package net.daverix.ajvm.operation
 
 
-import net.daverix.ajvm.ByteCodeReader
-import net.daverix.ajvm.Frame
-import net.daverix.ajvm.VirtualObject
-import net.daverix.ajvm.getArgumentCount
+import net.daverix.ajvm.*
 import net.daverix.ajvm.io.ConstantPool
 import net.daverix.ajvm.io.MethodReference
 import net.daverix.ajvm.io.NameAndTypeDescriptorReference
@@ -37,7 +34,7 @@ class InvokeSpecialOperation(private val constantPool: ConstantPool) : ByteCodeO
         val methodReference = constantPool[methodReferenceIndex] as MethodReference
         val nameAndType = constantPool[methodReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
         val methodName = constantPool[nameAndType.nameIndex] as String
-        val methodDescriptor = constantPool[nameAndType.descriptorIndex] as String
+        val methodDescriptor = constantPool[nameAndType.descriptorIndex] as MethodDescriptor
         val argumentCount = methodDescriptor.getArgumentCount()
 
         val methodArgs = arrayOfNulls<Any>(argumentCount)

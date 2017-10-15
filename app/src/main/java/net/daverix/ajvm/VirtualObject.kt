@@ -29,5 +29,5 @@ interface VirtualObject {
     fun getFieldValue(fieldName: String): Any?
 
     @Throws(IOException::class)
-    fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any?
+    fun invokeMethod(name: String, descriptor: MethodDescriptor, args: Array<Any?>): Any?
 }

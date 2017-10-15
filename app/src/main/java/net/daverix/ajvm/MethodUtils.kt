@@ -20,7 +20,9 @@ import java.util.regex.Pattern
 
 private val METHOD_PARAMETER_COUNT_PATTERN = Pattern.compile("\\((B|C|D|F|I|J|L.+;|S|Z|\\[.+)*\\)B|C|D|F|I|J|L.+;|S|Z|\\[.+")
 
-fun String.getArgumentCount(): Int {
+typealias MethodDescriptor = String
+
+fun MethodDescriptor.getArgumentCount(): Int {
     if (startsWith("()"))
         return 0
 
