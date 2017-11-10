@@ -19,7 +19,7 @@ package net.daverix.ajvm
 /**
  * Opcodes for Java taken from https://en.wikipedia.org/wiki/Java_bytecode_instruction_listings
  */
-enum class Opcodes(val byteCode: Int) {
+enum class Opcode(val byteCode: Int) {
     /**
      * perform no operation
      */
@@ -1104,19 +1104,19 @@ enum class Opcodes(val byteCode: Int) {
     IMPDEP2(0xff);
 }
 
-fun fromByteCode(code: Int) = Opcodes.values().firstOrNull { it.byteCode == code }
+fun fromByteCode(code: Int) = Opcode.values().firstOrNull { it.byteCode == code }
 
 @Throws(IllegalAccessException::class)
 fun visualize(code: ByteArray): String {
     val builder = StringBuilder()
     val reader = ByteCodeReader(code)
     while (reader.canReadByte()) {
-        val bytecode = Opcodes.values().firstOrNull { it.byteCode == reader.readUnsignedByte() }
+        val bytecode = Opcode.values().firstOrNull { it.byteCode == reader.readUnsignedByte() }
         builder.append(bytecode?.name).append(" ")
 
         when (bytecode) {
-            Opcodes.NEW, Opcodes.GETSTATIC, Opcodes.INVOKEVIRTUAL, Opcodes.INVOKESPECIAL -> builder.append(reader.readUnsignedShort()).append("\n")
-            Opcodes.LDC, Opcodes.ILOAD, Opcodes.LLOAD, Opcodes.FLOAD, Opcodes.DLOAD, Opcodes.ALOAD -> builder.append(reader.readUnsignedByte()).append("\n")
+            Opcode.NEW, Opcode.GETSTATIC, Opcode.INVOKEVIRTUAL, Opcode.INVOKESPECIAL -> builder.append(reader.readUnsignedShort()).append("\n")
+            Opcode.LDC, Opcode.ILOAD, Opcode.LLOAD, Opcode.FLOAD, Opcode.DLOAD, Opcode.ALOAD -> builder.append(reader.readUnsignedByte()).append("\n")
             else -> builder.append("\n")
         }
     }
