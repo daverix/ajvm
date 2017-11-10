@@ -17,7 +17,6 @@
 package net.daverix.ajvm
 
 
-import android.annotation.SuppressLint
 import net.daverix.ajvm.operation.*
 import java.io.IOException
 
@@ -25,7 +24,6 @@ class ApplicationObjectLoader(private val classInfoProvider: ClassInfoProvider,
                               private val staticClasses: MutableMap<String, VirtualObject>,
                               private val outStream: PrintStreamObject,
                               private val errStream: PrintStreamObject) : VirtualObjectLoader {
-    @SuppressLint("UseSparseArrays")
     @Throws(IOException::class)
     override fun load(qualifiedName: String): VirtualObject {
         when (qualifiedName) {
