@@ -18,16 +18,16 @@ package net.daverix.ajvm.operation
 
 
 import net.daverix.ajvm.ByteCodeReader
-import net.daverix.ajvm.Frame
+import net.daverix.ajvm.OperandStack
 import java.io.IOException
 
 class AALoadOperation : ByteCodeOperation {
     @Throws(IOException::class)
     override fun execute(reader: ByteCodeReader,
                          indexOfBytecode: Int,
-                         currentFrame: Frame) {
-        val index = currentFrame.pop() as Int
-        val array = currentFrame.pop() as Array<Any?>
-        currentFrame.push(array[index])
+                         stack: OperandStack, localVariables: Array<Any?>) {
+        val index = stack.pop() as Int
+        val array = stack.pop() as Array<*>
+        stack.push(array[index])
     }
 }

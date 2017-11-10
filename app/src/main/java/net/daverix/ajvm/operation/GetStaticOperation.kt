@@ -18,7 +18,7 @@ package net.daverix.ajvm.operation
 
 
 import net.daverix.ajvm.ByteCodeReader
-import net.daverix.ajvm.Frame
+import net.daverix.ajvm.OperandStack
 import net.daverix.ajvm.VirtualObject
 import net.daverix.ajvm.VirtualObjectLoader
 import net.daverix.ajvm.io.ClassReference
@@ -32,7 +32,7 @@ class GetStaticOperation(private val staticClasses: MutableMap<String, VirtualOb
                          private val constantPool: ConstantPool) : ByteCodeOperation {
 
     @Throws(IOException::class)
-    override fun execute(reader: ByteCodeReader, indexOfBytecode: Int, currentFrame: Frame) {
+    override fun execute(reader: ByteCodeReader, indexOfBytecode: Int, stack: OperandStack, localVariables: Array<Any?>) {
         val staticFieldIndex = reader.readUnsignedShort()
 
         val fieldReference = constantPool[staticFieldIndex] as FieldReference
@@ -48,6 +48,6 @@ class GetStaticOperation(private val staticClasses: MutableMap<String, VirtualOb
             staticClasses.put(fieldClassName, staticClass)
         }
 
-        currentFrame.push(staticClass.fields[fieldName])
+        stack.push(staticClass.fields[fieldName])
     }
 }

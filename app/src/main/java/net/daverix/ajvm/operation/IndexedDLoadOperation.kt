@@ -18,7 +18,7 @@ package net.daverix.ajvm.operation
 
 
 import net.daverix.ajvm.ByteCodeReader
-import net.daverix.ajvm.Frame
+import net.daverix.ajvm.OperandStack
 import java.io.IOException
 
 class IndexedDLoadOperation(private val index: Int) : ByteCodeOperation {
@@ -26,11 +26,12 @@ class IndexedDLoadOperation(private val index: Int) : ByteCodeOperation {
     @Throws(IOException::class)
     override fun execute(reader: ByteCodeReader,
                          indexOfBytecode: Int,
-                         currentFrame: Frame) {
-        val variable = currentFrame.localVariables[index]
+                         stack: OperandStack,
+                         localVariables: Array<Any?>) {
+        val variable = localVariables[index]
         if (variable !is Double)
             throw IllegalStateException("variable $variable is not a Double")
 
-        currentFrame.push(variable)
+        stack.push(variable)
     }
 }

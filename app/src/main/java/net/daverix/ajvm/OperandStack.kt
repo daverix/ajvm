@@ -19,9 +19,7 @@ package net.daverix.ajvm
 
 import java.util.*
 
-class Frame(maxLocals: Int,
-            private val maxStackDepth: Int) {
-    val localVariables: Array<Any?> = arrayOfNulls(maxLocals)
+class OperandStack(private val maxStackDepth: Int) {
     private val operandStack = Stack<Any?>()
 
     fun push(item: Any?) {

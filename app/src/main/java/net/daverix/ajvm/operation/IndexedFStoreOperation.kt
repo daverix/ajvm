@@ -18,7 +18,7 @@ package net.daverix.ajvm.operation
 
 
 import net.daverix.ajvm.ByteCodeReader
-import net.daverix.ajvm.Frame
+import net.daverix.ajvm.OperandStack
 import java.io.IOException
 
 class IndexedFStoreOperation(private val index: Int) : ByteCodeOperation {
@@ -26,11 +26,12 @@ class IndexedFStoreOperation(private val index: Int) : ByteCodeOperation {
     @Throws(IOException::class)
     override fun execute(reader: ByteCodeReader,
                          indexOfBytecode: Int,
-                         currentFrame: Frame) {
-        val localVariable = currentFrame.pop()
+                         stack: OperandStack,
+                         localVariables: Array<Any?>) {
+        val localVariable = stack.pop()
         if (localVariable !is Float)
             throw IllegalStateException("variable $localVariable is not a Float")
 
-        currentFrame.localVariables[index] = localVariable
+        localVariables[index] = localVariable
     }
 }

@@ -31,7 +31,8 @@ class InvokeStaticOperation(private val staticClasses: MutableMap<String, Virtua
     @Throws(IOException::class)
     override fun execute(reader: ByteCodeReader,
                          indexOfBytecode: Int,
-                         currentFrame: Frame) {
+                         stack: OperandStack,
+                         localVariables: Array<Any?>) {
         val methodReferenceIndex = reader.readUnsignedShort()
         val methodReference = constantPool[methodReferenceIndex] as MethodReference
         val nameAndType = constantPool[methodReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
@@ -41,7 +42,7 @@ class InvokeStaticOperation(private val staticClasses: MutableMap<String, Virtua
 
         val methodArgs = arrayOfNulls<Any>(argumentCount)
         for (i in argumentCount - 1 downTo 0) {
-            methodArgs[i] = currentFrame.pop()
+            methodArgs[i] = stack.pop()
         }
 
         val classReference = constantPool[methodReference.classIndex] as ClassReference
@@ -54,7 +55,7 @@ class InvokeStaticOperation(private val staticClasses: MutableMap<String, Virtua
 
         val result = staticClass.invokeMethod(methodName, methodDescriptor, methodArgs)
         if (!methodDescriptor.endsWith("V")) {
-            currentFrame.push(result!!)
+            stack.push(result!!)
         }
     }
 }

@@ -18,20 +18,20 @@ package net.daverix.ajvm.operation
 
 
 import net.daverix.ajvm.ByteCodeReader
-import net.daverix.ajvm.Frame
+import net.daverix.ajvm.OperandStack
 import java.io.IOException
 
 class DStoreOperation : ByteCodeOperation {
     @Throws(IOException::class)
     override fun execute(reader: ByteCodeReader,
                          indexOfBytecode: Int,
-                         currentFrame: Frame) {
+                         stack: OperandStack, localVariables: Array<Any?>) {
         val index = reader.readUnsignedByte()
-        val localVariable = currentFrame.pop()
+        val localVariable = stack.pop()
 
         if (localVariable !is Double)
             throw IllegalStateException("variable $localVariable is not an Double")
 
-        currentFrame.localVariables[index] = localVariable
+        localVariables[index] = localVariable
     }
 }

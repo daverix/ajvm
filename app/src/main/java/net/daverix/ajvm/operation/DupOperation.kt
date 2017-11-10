@@ -18,14 +18,15 @@ package net.daverix.ajvm.operation
 
 
 import net.daverix.ajvm.ByteCodeReader
-import net.daverix.ajvm.Frame
+import net.daverix.ajvm.OperandStack
 import java.io.IOException
 
 class DupOperation : ByteCodeOperation {
     @Throws(IOException::class)
     override fun execute(reader: ByteCodeReader,
                          indexOfBytecode: Int,
-                         currentFrame: Frame) {
-        currentFrame.push(currentFrame.peek())
+                         stack: OperandStack,
+                         localVariables: Array<Any?>) {
+        stack.push(stack.peek())
     }
 }

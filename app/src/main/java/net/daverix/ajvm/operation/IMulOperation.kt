@@ -18,14 +18,17 @@ package net.daverix.ajvm.operation
 
 
 import net.daverix.ajvm.ByteCodeReader
-import net.daverix.ajvm.Frame
+import net.daverix.ajvm.OperandStack
 import java.io.IOException
 
 class IMulOperation : ByteCodeOperation {
     @Throws(IOException::class)
-    override fun execute(reader: ByteCodeReader, indexOfBytecode: Int, currentFrame: Frame) {
-        val iMul2 = currentFrame.pop() as Int
-        val iMul1 = currentFrame.pop() as Int
-        currentFrame.push(iMul1 * iMul2)
+    override fun execute(reader: ByteCodeReader,
+                         indexOfBytecode: Int,
+                         stack: OperandStack,
+                         localVariables: Array<Any?>) {
+        val iMul2 = stack.pop() as Int
+        val iMul1 = stack.pop() as Int
+        stack.push(iMul1 * iMul2)
     }
 }

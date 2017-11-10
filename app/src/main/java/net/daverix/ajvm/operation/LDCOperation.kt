@@ -18,7 +18,7 @@ package net.daverix.ajvm.operation
 
 
 import net.daverix.ajvm.ByteCodeReader
-import net.daverix.ajvm.Frame
+import net.daverix.ajvm.OperandStack
 import net.daverix.ajvm.io.ConstantPool
 import net.daverix.ajvm.io.MethodHandleReference
 import net.daverix.ajvm.io.StringReference
@@ -27,13 +27,16 @@ import java.io.IOException
 class LDCOperation(private val constantPool: ConstantPool) : ByteCodeOperation {
 
     @Throws(IOException::class)
-    override fun execute(reader: ByteCodeReader, indexOfBytecode: Int, currentFrame: Frame) {
+    override fun execute(reader: ByteCodeReader,
+                         indexOfBytecode: Int,
+                         stack: OperandStack,
+                         localVariables: Array<Any?>) {
         val ldcIndex = reader.readUnsignedByte()
 
         val constant = constantPool[ldcIndex]
         when (constant) {
-            is Int, is Float, is String, is MethodHandleReference -> currentFrame.push(constant)
-            is StringReference -> currentFrame.push(constantPool[constant.index]!!)
+            is Int, is Float, is String, is MethodHandleReference -> stack.push(constant)
+            is StringReference -> stack.push(constantPool[constant.index]!!)
         }
     }
 }

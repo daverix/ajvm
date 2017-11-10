@@ -27,7 +27,10 @@ import java.io.IOException
 class InvokeSpecialOperation(private val constantPool: ConstantPool) : ByteCodeOperation {
 
     @Throws(IOException::class)
-    override fun execute(reader: ByteCodeReader, indexOfBytecode: Int, currentFrame: Frame) {
+    override fun execute(reader: ByteCodeReader,
+                         indexOfBytecode: Int,
+                         stack: OperandStack,
+                         localVariables: Array<Any?>) {
         //TODO: http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.invokespecial
         // need to call super methods etc properly
         val methodReferenceIndex = reader.readUnsignedShort()
@@ -39,20 +42,20 @@ class InvokeSpecialOperation(private val constantPool: ConstantPool) : ByteCodeO
 
         val methodArgs = arrayOfNulls<Any>(argumentCount)
         for (i in argumentCount - 1 downTo 0) {
-            methodArgs[i] = currentFrame.pop()
+            methodArgs[i] = stack.pop()
         }
 
-        val instance = currentFrame.pop()
+        val instance = stack.pop()
         when {
             instance is VirtualObject -> {
                 val result = instance.invokeMethod(methodName, methodDescriptor, methodArgs)
                 if (!methodDescriptor.endsWith("V")) {
-                    currentFrame.push(result!!)
+                    stack.push(result!!)
                 }
             }
-            instance is String && methodName == "hashCode" -> currentFrame.push(instance.hashCode())
-            instance is String && methodName == "equals" -> currentFrame.push(if (instance == methodArgs[0]) 1 else 0)
-            instance is Int -> currentFrame.push(if (instance === methodArgs[0]) 1 else 0)
+            instance is String && methodName == "hashCode" -> stack.push(instance.hashCode())
+            instance is String && methodName == "equals" -> stack.push(if (instance == methodArgs[0]) 1 else 0)
+            instance is Int -> stack.push(if (instance === methodArgs[0]) 1 else 0)
             else -> throw UnsupportedOperationException("don't know how to handle " + instance)
         }
     }

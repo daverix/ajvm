@@ -18,7 +18,7 @@ package net.daverix.ajvm.operation
 
 
 import net.daverix.ajvm.ByteCodeReader
-import net.daverix.ajvm.Frame
+import net.daverix.ajvm.OperandStack
 import java.io.IOException
 import java.util.*
 
@@ -26,7 +26,8 @@ class TableSwitchOperation : ByteCodeOperation {
     @Throws(IOException::class)
     override fun execute(reader: ByteCodeReader,
                          indexOfBytecode: Int,
-                         currentFrame: Frame) {
+                         stack: OperandStack,
+                         localVariables: Array<Any?>) {
         reader.skip((indexOfBytecode + 1) % 4)
         val defaultValue = reader.readInt()
         val low = reader.readInt()
@@ -38,13 +39,12 @@ class TableSwitchOperation : ByteCodeOperation {
 
         val offsetWidth = high - low + 1
         val table = IntArray(offsetWidth) { reader.readInt() }
-        val tableIndex = currentFrame.pop() as Int
-        val targetAddress: Int
-        if (tableIndex < low || tableIndex > high) {
+        val tableIndex = stack.pop() as Int
+        val targetAddress = if (tableIndex < low || tableIndex > high) {
             // TODO: why would Math.abs be needed to turn for example -120 into 120 here?
-            targetAddress = indexOfBytecode + Math.abs(defaultValue)
+            indexOfBytecode + Math.abs(defaultValue)
         } else {
-            targetAddress = indexOfBytecode + table[tableIndex - low]
+            indexOfBytecode + table[tableIndex - low]
         }
         reader.jumpTo(targetAddress)
     }

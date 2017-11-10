@@ -18,7 +18,7 @@ package net.daverix.ajvm.operation
 
 
 import net.daverix.ajvm.ByteCodeReader
-import net.daverix.ajvm.Frame
+import net.daverix.ajvm.OperandStack
 import java.io.IOException
 import java.util.*
 
@@ -26,14 +26,15 @@ class FLoadOperation : ByteCodeOperation {
     @Throws(IOException::class)
     override fun execute(reader: ByteCodeReader,
                          indexOfBytecode: Int,
-                         currentFrame: Frame) {
+                         stack: OperandStack,
+                         localVariables: Array<Any?>) {
         val index = reader.readUnsignedByte()
-        val variable = currentFrame.localVariables[index]
+        val variable = localVariables[index]
         if (variable !is Float)
             throw IllegalStateException(String.format(Locale.ENGLISH,
                     "variable %s at index %d is not a Float",
                     variable, index))
 
-        currentFrame.push(variable)
+        stack.push(variable)
     }
 }

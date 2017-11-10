@@ -39,17 +39,19 @@ class RuntimeVirtualObject(private val classInfo: ClassInfo,
         val (maxStack, maxLocals, code) = method.getCodeAttribute()
         val reader = ByteCodeReader(code)
 
-        val currentFrame = Frame(maxLocals, maxStack)
+        val localVariables: Array<Any?> = arrayOfNulls(maxLocals)
         for (i in args.indices) {
-            currentFrame.localVariables[i] = args[i]
+            localVariables[i] = args[i]
         }
+
+        val stack = OperandStack(maxStack)
 
         while (reader.canReadByte()) {
             val byteCodeIndex = reader.index
             val byteCode = fromByteCode(reader.readUnsignedByte())
 
             if (byteCode == Opcode.RETURN) return null
-            if (byteCode == Opcode.IRETURN) return currentFrame.pop()
+            if (byteCode == Opcode.IRETURN) return stack.pop()
 
             val operation = byteCodeOperations[byteCode]
             if (operation == null) {
@@ -59,7 +61,7 @@ class RuntimeVirtualObject(private val classInfo: ClassInfo,
                         "at position $byteCodeIndex")
             }
 
-            operation.execute(reader, byteCodeIndex, currentFrame)
+            operation.execute(reader, byteCodeIndex, stack, localVariables)
         }
 
         return null
