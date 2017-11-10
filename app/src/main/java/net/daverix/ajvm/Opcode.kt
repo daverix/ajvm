@@ -1104,7 +1104,7 @@ enum class Opcode(val byteCode: Int) {
     IMPDEP2(0xff);
 }
 
-fun fromByteCode(code: Int) = Opcode.values().firstOrNull { it.byteCode == code }
+fun fromByteCode(code: Int) = Opcode.values().first { it.byteCode == code }
 
 @Throws(IllegalAccessException::class)
 fun visualize(code: ByteArray): String {

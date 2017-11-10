@@ -52,21 +52,27 @@ class RuntimeVirtualObject(private val classInfo: ClassInfo,
         val (maxStack, maxLocals, code) = method.getCodeAttribute()
         val reader = ByteCodeReader(code)
 
-        val currentFrame = Frame(
-                maxLocals,
-                maxStack)
+        val currentFrame = Frame(maxLocals, maxStack)
         for (i in args.indices) {
             currentFrame.setLocalVariable(i, args[i])
         }
 
         while (reader.canReadByte()) {
-            val indexOfBytecode = reader.index
-            val byteCode = fromByteCode(reader.readUnsignedByte()) ?: throw IllegalStateException("byteCode is null")
+            val byteCodeIndex = reader.index
+            val byteCode = fromByteCode(reader.readUnsignedByte())
 
             if (byteCode == Opcode.RETURN) return null
             if (byteCode == Opcode.IRETURN) return currentFrame.pop()
 
-            byteCodeOperations[byteCode]?.execute(reader, indexOfBytecode, currentFrame) ?: throw IllegalStateException("Unknown bytecode: ${byteCode.name} (${byteCode.byteCode.toString(2)}) at position $indexOfBytecode")
+            val operation = byteCodeOperations[byteCode]
+            if (operation == null) {
+                val byteCodeName = byteCode.name
+                val hexCode = byteCode.byteCode.toString(2)
+                throw IllegalStateException("Unknown bytecode: $byteCodeName ($hexCode) " +
+                        "at position $byteCodeIndex")
+            }
+
+            operation.execute(reader, byteCodeIndex, currentFrame)
         }
 
         return null
