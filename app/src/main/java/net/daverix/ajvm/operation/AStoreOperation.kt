@@ -27,7 +27,6 @@ class AStoreOperation : ByteCodeOperation {
                          indexOfBytecode: Int,
                          currentFrame: Frame) {
         val index = reader.readUnsignedByte()
-        val localVariable = currentFrame.pop()
-        currentFrame.setLocalVariable(index, localVariable)
+        currentFrame.localVariables[index] = currentFrame.pop()
     }
 }

@@ -31,6 +31,6 @@ class IndexedFStoreOperation(private val index: Int) : ByteCodeOperation {
         if (localVariable !is Float)
             throw IllegalStateException("variable $localVariable is not a Float")
 
-        currentFrame.setLocalVariable(index, localVariable)
+        currentFrame.localVariables[index] = localVariable
     }
 }

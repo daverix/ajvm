@@ -21,7 +21,7 @@ import java.util.*
 
 class Frame(maxLocals: Int,
             private val maxStackDepth: Int) {
-    private val localVariables: Array<Any?> = arrayOfNulls(maxLocals)
+    val localVariables: Array<Any?> = arrayOfNulls(maxLocals)
     private val operandStack = Stack<Any?>()
 
     fun push(item: Any?) {
@@ -31,19 +31,7 @@ class Frame(maxLocals: Int,
         operandStack.push(item)
     }
 
-    fun pop(): Any? {
-        return operandStack.pop()
-    }
+    fun pop() = operandStack.pop()
 
-    fun setLocalVariable(index: Int, value: Any?) {
-        localVariables[index] = value
-    }
-
-    fun getLocalVariable(index: Int): Any? {
-        return localVariables[index]
-    }
-
-    fun peek(): Any? {
-        return operandStack.peek()
-    }
+    fun peek() = operandStack.peek()
 }

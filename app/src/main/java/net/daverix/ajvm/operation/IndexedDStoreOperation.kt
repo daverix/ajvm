@@ -31,6 +31,6 @@ class IndexedDStoreOperation(private val index: Int) : ByteCodeOperation {
         if (localVariable !is Double)
             throw IllegalStateException("variable $localVariable is not a Double")
 
-        currentFrame.setLocalVariable(index, localVariable)
+        currentFrame.localVariables[index] = localVariable
     }
 }

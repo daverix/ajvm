@@ -48,6 +48,6 @@ class GetStaticOperation(private val staticClasses: MutableMap<String, VirtualOb
             staticClasses.put(fieldClassName, staticClass)
         }
 
-        currentFrame.push(staticClass.getFieldValue(fieldName))
+        currentFrame.push(staticClass.fields[fieldName])
     }
 }

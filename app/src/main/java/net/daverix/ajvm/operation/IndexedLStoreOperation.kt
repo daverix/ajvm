@@ -31,6 +31,6 @@ class IndexedLStoreOperation(private val index: Int) : ByteCodeOperation {
         if (localVariable !is Long)
             throw IllegalStateException("variable $localVariable is not a Long")
 
-        currentFrame.setLocalVariable(index, localVariable)
+        currentFrame.localVariables[index] = localVariable
     }
 }

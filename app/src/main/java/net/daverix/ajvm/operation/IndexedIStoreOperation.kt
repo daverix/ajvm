@@ -31,6 +31,6 @@ class IndexedIStoreOperation(private val index: Int) : ByteCodeOperation {
         if (localVariable !is Int)
             throw IllegalStateException("variable $localVariable is not an Integer")
 
-        currentFrame.setLocalVariable(index, localVariable)
+        currentFrame.localVariables[index] = localVariable
     }
 }

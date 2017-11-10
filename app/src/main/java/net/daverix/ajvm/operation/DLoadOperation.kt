@@ -28,7 +28,7 @@ class DLoadOperation : ByteCodeOperation {
                          indexOfBytecode: Int,
                          currentFrame: Frame) {
         val index = reader.readUnsignedByte()
-        val variable = currentFrame.getLocalVariable(index)
+        val variable = currentFrame.localVariables[index]
         if (variable !is Double)
             throw IllegalStateException(String.format(Locale.ENGLISH,
                     "variable %s at index %d is not a Double",

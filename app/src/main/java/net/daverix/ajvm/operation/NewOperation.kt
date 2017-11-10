@@ -32,10 +32,10 @@ class NewOperation(private val loader: VirtualObjectLoader,
                          indexOfBytecode: Int,
                          currentFrame: Frame) {
         val newObjectIndex = reader.readUnsignedShort()
-        val classRef = constantPool[newObjectIndex] as ClassReference?
-        val className = constantPool[classRef!!.nameIndex] as String?
+        val classRef = constantPool[newObjectIndex] as ClassReference
+        val className = constantPool[classRef.nameIndex] as String
 
-        val virtualObject = loader.load(className!!)
+        val virtualObject = loader.load(className)
         currentFrame.push(virtualObject)
     }
 }

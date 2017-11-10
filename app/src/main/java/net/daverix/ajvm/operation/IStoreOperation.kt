@@ -32,6 +32,6 @@ class IStoreOperation : ByteCodeOperation {
         if (localVariable !is Int)
             throw IllegalStateException("variable $localVariable is not an Long")
 
-        currentFrame.setLocalVariable(index, localVariable)
+        currentFrame.localVariables[index] = localVariable
     }
 }

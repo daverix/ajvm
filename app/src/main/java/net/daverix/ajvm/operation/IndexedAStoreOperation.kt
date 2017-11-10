@@ -28,6 +28,6 @@ class IndexedAStoreOperation(private val index: Int) : ByteCodeOperation {
                          indexOfBytecode: Int,
                          currentFrame: Frame) {
         val localVariable = currentFrame.pop()
-        currentFrame.setLocalVariable(index, localVariable)
+        currentFrame.localVariables[index] = localVariable
     }
 }

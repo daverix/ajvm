@@ -27,7 +27,7 @@ class IndexedDLoadOperation(private val index: Int) : ByteCodeOperation {
     override fun execute(reader: ByteCodeReader,
                          indexOfBytecode: Int,
                          currentFrame: Frame) {
-        val variable = currentFrame.getLocalVariable(index)
+        val variable = currentFrame.localVariables[index]
         if (variable !is Double)
             throw IllegalStateException("variable $variable is not a Double")
 

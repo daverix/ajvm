@@ -32,6 +32,6 @@ class DStoreOperation : ByteCodeOperation {
         if (localVariable !is Double)
             throw IllegalStateException("variable $localVariable is not an Double")
 
-        currentFrame.setLocalVariable(index, localVariable)
+        currentFrame.localVariables[index] = localVariable
     }
 }

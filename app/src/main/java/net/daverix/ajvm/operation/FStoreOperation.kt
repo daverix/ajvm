@@ -32,6 +32,6 @@ class FStoreOperation : ByteCodeOperation {
         if (localVariable !is Float)
             throw IllegalStateException("variable $localVariable is not an Float")
 
-        currentFrame.setLocalVariable(index, localVariable)
+        currentFrame.localVariables[index] = localVariable
     }
 }
