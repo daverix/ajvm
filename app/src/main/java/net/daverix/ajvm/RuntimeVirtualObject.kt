@@ -25,7 +25,7 @@ import java.io.IOException
 import java.util.*
 
 class RuntimeVirtualObject(private val classInfo: ClassInfo,
-                           private val byteCodeOperations: Map<Int, ByteCodeOperation>) : VirtualObject {
+                           private val byteCodeOperations: Map<Opcodes, ByteCodeOperation>) : VirtualObject {
 
     private val fieldValues = HashMap<String, Any?>()
     private val constantPool: ConstantPool = classInfo.constantPool
@@ -61,16 +61,12 @@ class RuntimeVirtualObject(private val classInfo: ClassInfo,
 
         while (reader.canReadByte()) {
             val indexOfBytecode = reader.index
-            val byteCode = reader.readUnsignedByte()
-            if (byteCode == Opcodes.RETURN)
-                return null
+            val byteCode = fromByteCode(reader.readUnsignedByte()) ?: throw IllegalStateException("byteCode is null")
 
-            if (byteCode == Opcodes.IRETURN)
-                return currentFrame.pop()
+            if (byteCode == Opcodes.RETURN) return null
+            if (byteCode == Opcodes.IRETURN) return currentFrame.pop()
 
-            val operation = byteCodeOperations[byteCode] ?: throw IllegalStateException("Unknown bytecode: " + Integer.toHexString(byteCode) + " at position " + indexOfBytecode)
-
-            operation.execute(reader, indexOfBytecode, currentFrame)
+            byteCodeOperations[byteCode]?.execute(reader, indexOfBytecode, currentFrame) ?: throw IllegalStateException("Unknown bytecode: ${byteCode.name} (${byteCode.byteCode.toString(2)}) at position $indexOfBytecode")
         }
 
         return null
