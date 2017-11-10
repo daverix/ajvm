@@ -19,25 +19,13 @@ package net.daverix.ajvm
 
 import java.io.IOException
 
-class SystemObject(private val out: PrintStreamObject,
-                   private val err: PrintStreamObject) : VirtualObject {
-
+class SystemObject(out: PrintStreamObject,
+                   err: PrintStreamObject) : VirtualObject {
+    override val fields: Map<String, Any> = mapOf("out" to out, "err" to err)
     override val name: String
         get() = "java/lang/System"
 
     override fun initialize(args: Array<Any>) {
-
-    }
-
-    override fun setFieldValue(fieldName: String, value: Any?) {
-
-    }
-
-    override fun getFieldValue(fieldName: String): Any? {
-        if ("out" == fieldName)
-            return out
-
-        return if ("err" == fieldName) err else null
 
     }
 

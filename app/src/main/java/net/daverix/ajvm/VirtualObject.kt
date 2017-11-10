@@ -21,12 +21,9 @@ import java.io.IOException
 
 interface VirtualObject {
     val name: String
+    val fields: Map<String,Any>
 
     fun initialize(args: Array<Any>)
-
-    fun setFieldValue(fieldName: String, value: Any?)
-
-    fun getFieldValue(fieldName: String): Any?
 
     @Throws(IOException::class)
     fun invokeMethod(name: String, descriptor: MethodDescriptor, args: Array<Any?>): Any?

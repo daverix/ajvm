@@ -28,7 +28,8 @@ data class ClassInfo(val majorVersion: Int,
                      val fields: Array<FieldInfo>,
                      val methods: Array<MethodInfo>,
                      val attributes: Array<AttributeInfo>) {
-
+    val name: String
+        get() = constantPool[classIndex] as String
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -74,5 +75,4 @@ data class ClassInfo(val majorVersion: Int,
                 "methods=${Arrays.toString(methods)}, " +
                 "attributes=${Arrays.toString(attributes)})"
     }
-
 }

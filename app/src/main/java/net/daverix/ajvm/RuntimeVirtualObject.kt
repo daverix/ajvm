@@ -18,31 +18,18 @@ package net.daverix.ajvm
 
 
 import net.daverix.ajvm.io.ClassInfo
-import net.daverix.ajvm.io.ConstantPool
 import net.daverix.ajvm.io.MethodInfo
 import net.daverix.ajvm.operation.ByteCodeOperation
 import java.io.IOException
-import java.util.*
 
 class RuntimeVirtualObject(private val classInfo: ClassInfo,
                            private val byteCodeOperations: Map<Opcode, ByteCodeOperation>) : VirtualObject {
-
-    private val fieldValues = HashMap<String, Any?>()
-    private val constantPool: ConstantPool = classInfo.constantPool
-
+    override val fields: Map<String, Any> = HashMap()
     override val name: String
-        get() = constantPool[classInfo.classIndex] as String
+        get() = classInfo.name
 
     override fun initialize(args: Array<Any>) {
 
-    }
-
-    override fun setFieldValue(fieldName: String, value: Any?) {
-        fieldValues.put(fieldName, value)
-    }
-
-    override fun getFieldValue(fieldName: String): Any? {
-        return fieldValues[fieldName]
     }
 
     @Throws(IOException::class)
@@ -54,7 +41,7 @@ class RuntimeVirtualObject(private val classInfo: ClassInfo,
 
         val currentFrame = Frame(maxLocals, maxStack)
         for (i in args.indices) {
-            currentFrame.setLocalVariable(i, args[i])
+            currentFrame.localVariables[i] = args[i]
         }
 
         while (reader.canReadByte()) {
@@ -80,6 +67,8 @@ class RuntimeVirtualObject(private val classInfo: ClassInfo,
 
     private fun getMethodByNameAndDescriptor(methodName: String, descriptor: String): MethodInfo {
         val methods = classInfo.methods
+        val constantPool = classInfo.constantPool
+
         for (method in methods) {
             val constantName = constantPool[method.nameIndex] as String?
             val constantDescriptor = constantPool[method.descriptorIndex] as String?

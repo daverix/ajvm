@@ -21,20 +21,12 @@ import java.io.IOException
 import java.io.PrintStream
 
 class PrintStreamObject(private val printStream: PrintStream) : VirtualObject {
-
+    override val fields: Map<String, Any> = mapOf()
     override val name: String
         get() = "java/io/PrintStream"
 
     override fun initialize(args: Array<Any>) {
 
-    }
-
-    override fun setFieldValue(fieldName: String, value: Any?) {
-
-    }
-
-    override fun getFieldValue(fieldName: String): Any? {
-        return null
     }
 
     @Throws(IOException::class)
