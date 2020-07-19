@@ -22,10 +22,6 @@ class SystemObject(out: PrintStreamObject,
     override val name: String
         get() = "java/lang/System"
 
-    override fun initialize(args: Array<Any>) {
-
-    }
-
     override fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
         return null
     }

@@ -31,10 +31,6 @@ class RuntimeVirtualObject(
     override val name: String
             get() = classInfo.name
 
-    override fun initialize(args: Array<Any>) {
-
-    }
-
     override fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
         val method = getMethodByNameAndDescriptor(name, descriptor)
                 ?: error("Cannot find method $name in ${classInfo.name}")

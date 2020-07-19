@@ -22,10 +22,6 @@ class PrintStreamObject(private val printer: Printer) : VirtualObject {
     override val fields: Map<String, Any> = mapOf()
     override val name: String = "java/io/PrintStream"
 
-    override fun initialize(args: Array<Any>) {
-
-    }
-
     override fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
         if ("println" == name && "(Ljava/lang/String;)V" == descriptor) {
             printer.println(args[0] as String)

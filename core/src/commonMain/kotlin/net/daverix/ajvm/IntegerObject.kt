@@ -23,13 +23,15 @@ class IntegerObject : VirtualObject {
     override val name: String
         get() = "java/lang/Integer"
 
-    override fun initialize(args: Array<Any>) {
-        integer = args[0] as Int?
-    }
-
     override fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
-        return if ("parseInt" == name && descriptor == "(Ljava/lang/String;)I" && args.size == 1) {
-            args[0].toString().toInt()
-        } else null
+        return when {
+            name == "<init>" -> {
+                integer = args[0] as Int?
+            }
+            name == "parseInt" && descriptor == "(Ljava/lang/String;)I" && args.size == 1 -> {
+                args[0].toString().toInt()
+            }
+            else -> null
+        }
     }
 }

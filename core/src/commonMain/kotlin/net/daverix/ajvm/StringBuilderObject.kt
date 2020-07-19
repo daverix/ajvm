@@ -19,12 +19,7 @@ package net.daverix.ajvm
 class StringBuilderObject : VirtualObject {
     private var builder: StringBuilder? = null
     override val fields: Map<String, Any> = mapOf()
-    override val name: String
-        get() = "java/lang/StringBuilder"
-
-    override fun initialize(args: Array<Any>) {
-
-    }
+    override val name: String = "java/lang/StringBuilder"
 
     override fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
         return when (name) {

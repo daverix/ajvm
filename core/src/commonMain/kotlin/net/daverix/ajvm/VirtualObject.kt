@@ -21,7 +21,5 @@ interface VirtualObject {
     val name: String
     val fields: Map<String,Any>
 
-    fun initialize(args: Array<Any>)
-
     fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any?
 }
