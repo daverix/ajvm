@@ -19,9 +19,10 @@ package net.daverix.ajvm
 import net.daverix.ajvm.operation.*
 
 class ApplicationObjectLoader(private val classInfoProvider: ClassInfoProvider,
-                              private val staticClasses: MutableMap<String, VirtualObject>,
                               private val outStream: PrintStreamObject,
                               private val errStream: PrintStreamObject) : VirtualObjectLoader {
+    private val staticLoader: VirtualObjectLoader = StaticClassLoader(this)
+
     override fun load(qualifiedName: String): VirtualObject {
         when (qualifiedName) {
             "java/lang/System" -> return SystemObject(outStream, errStream)
@@ -33,10 +34,10 @@ class ApplicationObjectLoader(private val classInfoProvider: ClassInfoProvider,
                     Opcode.NEW to NewOperation(this@ApplicationObjectLoader, classInfo.constantPool),
                     Opcode.DUP to DupOperation(),
                     Opcode.LDC to LDCOperation(classInfo.constantPool),
-                    Opcode.GETSTATIC to GetStaticOperation(staticClasses, this@ApplicationObjectLoader, classInfo.constantPool),
+                    Opcode.GETSTATIC to GetStaticOperation(staticLoader, classInfo.constantPool),
                     Opcode.INVOKEVIRTUAL to InvokeVirtualOperation(classInfo.constantPool),
                     Opcode.INVOKESPECIAL to InvokeSpecialOperation(classInfo.constantPool),
-                    Opcode.INVOKESTATIC to InvokeStaticOperation(staticClasses, this@ApplicationObjectLoader, classInfo.constantPool),
+                    Opcode.INVOKESTATIC to InvokeStaticOperation(staticLoader, classInfo.constantPool),
                     Opcode.ICONST_M1 to PushConstOperation(-1),
                     Opcode.ICONST_0 to PushConstOperation(0),
                     Opcode.LCONST_0 to PushConstOperation(0L),

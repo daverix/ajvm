@@ -26,8 +26,7 @@ import net.daverix.ajvm.io.FieldReference
 import net.daverix.ajvm.io.NameAndTypeDescriptorReference
 
 class GetStaticOperation(
-        private val staticClasses: MutableMap<String, VirtualObject>,
-        private val loader: VirtualObjectLoader,
+        private val staticLoader: VirtualObjectLoader,
         private val constantPool: ConstantPool
 ) : ByteCodeOperation {
 
@@ -46,12 +45,7 @@ class GetStaticOperation(
         val classReference = constantPool[fieldReference.classIndex] as ClassReference
         val fieldClassName = constantPool[classReference.nameIndex] as String
 
-        var staticClass: VirtualObject? = staticClasses[fieldClassName]
-        if (staticClass == null) {
-            staticClass = loader.load(fieldClassName)
-            staticClasses.put(fieldClassName, staticClass)
-        }
-
+        val staticClass = staticLoader.load(fieldClassName)
         stack.push(staticClass.fields[fieldName])
     }
 }

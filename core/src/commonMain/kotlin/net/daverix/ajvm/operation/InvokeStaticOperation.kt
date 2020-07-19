@@ -23,9 +23,10 @@ import net.daverix.ajvm.io.ConstantPool
 import net.daverix.ajvm.io.MethodReference
 import net.daverix.ajvm.io.NameAndTypeDescriptorReference
 
-class InvokeStaticOperation(private val staticClasses: MutableMap<String, VirtualObject>,
-                            private val loader: VirtualObjectLoader,
-                            private val constantPool: ConstantPool) : ByteCodeOperation {
+class InvokeStaticOperation(
+        private val staticLoader: VirtualObjectLoader,
+        private val constantPool: ConstantPool
+) : ByteCodeOperation {
 
     override fun execute(
             reader: ByteCodeReader,
@@ -48,11 +49,7 @@ class InvokeStaticOperation(private val staticClasses: MutableMap<String, Virtua
 
         val classReference = constantPool[methodReference.classIndex] as ClassReference
         val className = constantPool[classReference.nameIndex] as String
-        var staticClass: VirtualObject? = staticClasses[className]
-        if (staticClass == null) {
-            staticClass = loader.load(className)
-            staticClasses[className] = staticClass
-        }
+        val staticClass = staticLoader.load(className)
 
         val result = staticClass.invokeMethod(methodName, methodDescriptor, methodArgs)
         if (parsedMethodDescriptor.returnDescriptor != "V") {

@@ -8,5 +8,5 @@ interface StreamReader {
     fun readFloat(): Float
     fun read(bytes: ByteArray, start: Int, length: Int): Int
     fun read(bytes: ByteArray): Int
-    fun readFully(info: ByteArray)
+    fun readFully(bytes: ByteArray)
 }

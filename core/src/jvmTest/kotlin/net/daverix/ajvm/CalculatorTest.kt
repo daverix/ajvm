@@ -35,12 +35,10 @@ class CalculatorTest {
     @Before
     @Throws(IOException::class)
     fun setUp() {
-        val staticClasses = HashMap<String, VirtualObject>()
         outputStream = ByteArrayOutputStream()
         errStream = ByteArrayOutputStream()
         val classInfoProvider = FileSystemClassInfoProvider(getTestDataDirectory())
         val testClassLoader = ApplicationObjectLoader(classInfoProvider,
-                staticClasses,
                 PrintStreamObject(JvmPrinter(PrintStream(outputStream))),
                 PrintStreamObject(JvmPrinter(PrintStream(errStream))))
         sut = testClassLoader.load("net/daverix/ajvm/test/Calculator")
