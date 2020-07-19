@@ -55,7 +55,7 @@ class RuntimeVirtualObject(
             val operation = byteCodeOperations[byteCode]
             if (operation == null) {
                 val byteCodeName = byteCode.name
-                val hexCode = byteCode.byteCode.toString(2)
+                val hexCode = byteCode.byteCode.toString(16)
                 error("Unknown bytecode: $byteCodeName ($hexCode) at position $byteCodeIndex")
             }
 
