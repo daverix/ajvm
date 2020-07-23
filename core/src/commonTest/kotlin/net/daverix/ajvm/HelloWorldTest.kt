@@ -16,7 +16,6 @@
  */
 package net.daverix.ajvm
 
-import net.daverix.ajvm.testdata.byteCodeOfHelloWorld
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -31,7 +30,7 @@ class HelloWorldTest {
         stdOut = FakePrinter()
         stdErr = FakePrinter()
         val testClassLoader = ApplicationObjectLoader(
-                ByteCodeClassInfoProvider(byteCodeOfHelloWorld),
+                TestDataClassInfoProvider,
                 PrintStreamObject(stdOut),
                 PrintStreamObject(stdErr)
         )

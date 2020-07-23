@@ -16,7 +16,6 @@
  */
 package net.daverix.ajvm
 
-import net.daverix.ajvm.testdata.byteCodeOfCalculator
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -31,7 +30,7 @@ class CalculatorTest {
         stdOut = FakePrinter()
         stdErr = FakePrinter()
         val testClassLoader = ApplicationObjectLoader(
-                ByteCodeClassInfoProvider(byteCodeOfCalculator),
+                TestDataClassInfoProvider,
                 PrintStreamObject(stdOut),
                 PrintStreamObject(stdErr)
         )

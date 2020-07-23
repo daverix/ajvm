@@ -14,23 +14,27 @@ open class GenerateTestDataTask @Inject constructor(
 
     @TaskAction
     fun generateTestData() {
+        val packageName = "net.daverix.ajvm.testdata"
+        val relativePath = packageName.replace('.', '/')
+        val generatedFile = File(outputDir, "$relativePath/TestData.kt")
+        generatedFile.parentFile.mkdirs()
+
+        val lines = mutableListOf<String>()
         project.fileTree(classesDir).filter { !it.isDirectory && it.extension == "class" }.forEach { file ->
-            val packageName = "net.daverix.ajvm.testdata"
-            val relativePath = packageName.replace('.', '/')
-            val className = file.nameWithoutExtension
+            val className = file.nameWithoutExtension.replace("$","\\$")
+            println("parsing $className")
 
-            val generatedFile = File(outputDir, "$relativePath/${className}TestData.kt")
-            generatedFile.parentFile.mkdirs()
-            println("generating $generatedFile")
-
-            val joinedData = file.readBytes().joinToString(", ") {
-                String.format("0x%02X.toByte()", it)
+            val bytes = file.readBytes().joinToString(", ") {
+                String.format("0x%02X", it)
             }
-            generatedFile.writeText("""
-                    package $packageName
-                    
-                    val byteCodeOf${className} = byteArrayOf($joinedData)
-                """.trimIndent())
+            lines += "    \"net/daverix/ajvm/test/$className\" to intArrayOf($bytes).map { it.toByte() }.toByteArray()"
         }
+        generatedFile.writeText("""
+package $packageName
+
+val testData = mapOf(
+${lines.joinToString(",\n")}
+)
+                """.trimIndent())
     }
 }

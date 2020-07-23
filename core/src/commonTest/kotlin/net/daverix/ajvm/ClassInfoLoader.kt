@@ -2,7 +2,10 @@ package net.daverix.ajvm
 
 import net.daverix.ajvm.io.ClassInfo
 import net.daverix.ajvm.io.useDataInputStream
+import net.daverix.ajvm.testdata.testData
 
-class ByteCodeClassInfoProvider(private val byteCode: ByteArray) : ClassInfoProvider {
-    override fun getClassInfo(className: String): ClassInfo = byteCode.useDataInputStream { ClassInfo.read(it) }
+object TestDataClassInfoProvider : ClassInfoProvider {
+    override fun getClassInfo(className: String): ClassInfo = testData[className]
+            ?.useDataInputStream { ClassInfo.read(it) }
+            ?: error("cannot find $className")
 }
