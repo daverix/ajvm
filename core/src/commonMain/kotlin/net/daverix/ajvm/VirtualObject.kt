@@ -23,3 +23,8 @@ interface VirtualObject {
 
     fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any?
 }
+
+fun VirtualObject.invokeMain(args: Array<Any?>) {
+    //TODO: why do we have array of array here?
+    invokeMethod("main", "([Ljava/lang/String;)V", arrayOf(args))
+}

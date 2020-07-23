@@ -16,91 +16,77 @@
  */
 package net.daverix.ajvm
 
-
-import com.google.common.truth.Truth.assertThat
-import net.daverix.ajvm.io.JvmPrinter
-import org.junit.Before
-import org.junit.Test
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.IOException
-import java.io.PrintStream
-import java.util.*
+import net.daverix.ajvm.testdata.byteCodeOfCalculator
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class CalculatorTest {
-    private lateinit var outputStream: ByteArrayOutputStream
-    private lateinit var errStream: ByteArrayOutputStream
+    private lateinit var stdOut: FakePrinter
+    private lateinit var stdErr: FakePrinter
     private lateinit var sut: VirtualObject
 
-    @Before
-    @Throws(IOException::class)
+    @BeforeTest
     fun setUp() {
-        outputStream = ByteArrayOutputStream()
-        errStream = ByteArrayOutputStream()
-        val classInfoProvider = FileSystemClassInfoProvider(getTestDataDirectory())
-        val testClassLoader = ApplicationObjectLoader(classInfoProvider,
-                PrintStreamObject(JvmPrinter(PrintStream(outputStream))),
-                PrintStreamObject(JvmPrinter(PrintStream(errStream))))
+        stdOut = FakePrinter()
+        stdErr = FakePrinter()
+        val testClassLoader = ApplicationObjectLoader(
+                ByteCodeClassInfoProvider(byteCodeOfCalculator),
+                PrintStreamObject(stdOut),
+                PrintStreamObject(stdErr)
+        )
         sut = testClassLoader.load("net/daverix/ajvm/test/Calculator")
     }
 
     @Test
-    @Throws(IOException::class)
     fun add() {
         invokeCalculator("1 + 2")
 
         //Note! We call println so the string ends with \n
-        assertThat(String(outputStream.toByteArray())).isEqualTo("3\n")
+        assertEquals("3\n", stdOut.output)
     }
 
     @Test
-    @Throws(IOException::class)
     fun subtract() {
         invokeCalculator("3 - 2")
 
         //Note! We call println so the string ends with \n
-        assertThat(String(outputStream.toByteArray())).isEqualTo("1\n")
+        assertEquals("1\n", stdOut.output)
     }
 
     @Test
-    @Throws(IOException::class)
     fun divide() {
         invokeCalculator("6 / 2")
 
         //Note! We call println so the string ends with \n
-        assertThat(String(outputStream.toByteArray())).isEqualTo("3\n")
+        assertEquals("3\n", stdOut.output)
     }
 
     @Test
-    @Throws(IOException::class)
     fun multiply() {
         invokeCalculator("2 * 3")
 
         //Note! We call println so the string ends with \n
-        assertThat(String(outputStream.toByteArray())).isEqualTo("6\n")
+        assertEquals("6\n", stdOut.output)
     }
 
     @Test
-    @Throws(IOException::class)
     fun modulus() {
         invokeCalculator("5 % 2")
 
         //Note! We call println so the string ends with \n
-        assertThat(String(outputStream.toByteArray())).isEqualTo("1\n")
+        assertEquals("1\n", stdOut.output)
     }
 
     @Test
-    @Throws(IOException::class)
     fun testError() {
         invokeCalculator("5 ? 2")
 
         //Note! We call println so the string ends with \n
-        assertThat(String(errStream.toByteArray())).isEqualTo("Unknown operator ?\n")
+        assertEquals("Unknown operator ?\n", stdErr.output)
     }
 
-    @Throws(IOException::class)
     private fun invokeCalculator(args: String) {
-        sut.invokeMethod("main", "([Ljava/lang/String;)V",
-                arrayOf(args.split(" ").toTypedArray()))
+        sut.invokeMain(args.split(" ").toTypedArray())
     }
 }

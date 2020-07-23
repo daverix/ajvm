@@ -1,6 +1,10 @@
+import net.daverix.ajvm.plugin.GenerateTestDataTask
+
 plugins {
     id("org.jetbrains.kotlin.multiplatform") version "1.3.72"
 }
+
+val testDataDir = file("$buildDir/testdata")
 
 kotlin {
     jvm()
@@ -16,6 +20,7 @@ kotlin {
                 }
             }
             val commonTest by getting {
+                kotlin.srcDir("$buildDir/testdata")
                 dependencies {
                     implementation(kotlin("test-common"))
                     implementation(kotlin("test-annotations-common"))
@@ -41,10 +46,28 @@ kotlin {
             val jvmTest by getting {
                 dependencies {
                     implementation(kotlin("test-junit"))
-                    implementation("junit:junit:4.12")
-                    implementation("com.google.truth:truth:1.0.1")
                 }
             }
         }
+    }
+}
+
+tasks {
+    val generateTask = register(
+            "generateTestDataFiles",
+            GenerateTestDataTask::class,
+            file("$rootDir/testdata/build/classes/java/main"),
+            testDataDir
+    )
+    generateTask.configure {
+        dependsOn(":testdata:classes")
+    }
+
+    named("compileTestKotlinJs") {
+        dependsOn(generateTask)
+    }
+
+    named("compileTestKotlinJvm") {
+        dependsOn(generateTask)
     }
 }

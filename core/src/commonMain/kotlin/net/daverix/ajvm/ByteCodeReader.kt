@@ -25,7 +25,7 @@ class ByteCodeReader(private val code: ByteArray) {
     }
 
     private fun canRead(amount: Int): Boolean {
-        return index < code.size - amount
+        return index + amount < code.size
     }
 
     fun readUnsignedByte(): Int {

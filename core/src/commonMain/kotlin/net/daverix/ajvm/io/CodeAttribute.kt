@@ -16,8 +16,6 @@
  */
 package net.daverix.ajvm.io
 
-import net.daverix.ajvm.useReader
-
 data class CodeAttribute(
         val maxStack: Int,
         val maxLocals: Int,
@@ -50,22 +48,22 @@ data class CodeAttribute(
     }
 
     companion object {
-        fun read(info: ByteArray): CodeAttribute = info.useReader { reader ->
-            val maxStack = reader.readUnsignedShort()
-            val maxLocals = reader.readUnsignedShort()
-            val codeLength = reader.readInt()
+        fun read(input: DataInputStream): CodeAttribute {
+            val maxStack = input.readUnsignedShort()
+            val maxLocals = input.readUnsignedShort()
+            val codeLength = input.readInt()
 
             val code = ByteArray(codeLength)
-            if (reader.read(code) != codeLength)
+            if (input.read(code) != codeLength)
                 error("could not read all bytes for code")
 
-            val exceptionCount = reader.readUnsignedShort()
+            val exceptionCount = input.readUnsignedShort()
             val exceptionTable = Array(exceptionCount) {
                 Exception()
             }
-            val attributes = readAttributes(reader)
+            val attributes = readAttributes(input)
 
-            CodeAttribute(maxStack, maxLocals, code, exceptionTable, attributes)
+            return CodeAttribute(maxStack, maxLocals, code, exceptionTable, attributes)
         }
     }
 }

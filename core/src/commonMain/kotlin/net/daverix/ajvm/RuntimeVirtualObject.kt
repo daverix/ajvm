@@ -17,10 +17,7 @@
 package net.daverix.ajvm
 
 
-import net.daverix.ajvm.io.AttributeInfo
-import net.daverix.ajvm.io.ClassInfo
-import net.daverix.ajvm.io.CodeAttribute
-import net.daverix.ajvm.io.MethodInfo
+import net.daverix.ajvm.io.*
 import net.daverix.ajvm.operation.ByteCodeOperation
 
 class RuntimeVirtualObject(
@@ -33,9 +30,9 @@ class RuntimeVirtualObject(
 
     override fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
         val method = getMethodByNameAndDescriptor(name, descriptor)
-                ?: error("Cannot find method $name in ${classInfo.name}")
+                ?: error("Cannot find method $name in class ${classInfo.name}")
 
-        val (maxStack, maxLocals, code) = CodeAttribute.read(method.attributes["Code"].info)
+        val (maxStack, maxLocals, code) = method.attributes["Code"].info.useDataInputStream { CodeAttribute.read(it) }
         val reader = ByteCodeReader(code)
 
         val localVariables: Array<Any?> = arrayOfNulls(maxLocals)

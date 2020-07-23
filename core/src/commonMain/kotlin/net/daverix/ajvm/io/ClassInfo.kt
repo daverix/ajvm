@@ -72,7 +72,7 @@ data class ClassInfo(
     }
 
     companion object {
-        private const val MAGIC_NUMBER = -0x35014542
+        private const val MAGIC_NUMBER = -889275714 // 0xCAFEBABEu
         private const val CONSTANT_TAG_STRING = 1
         private const val CONSTANT_TAG_INTEGER = 3
         private const val CONSTANT_TAG_FLOAT = 4
@@ -88,23 +88,24 @@ data class ClassInfo(
         private const val CONSTANT_TAG_NAME_METHOD_TYPE = 16
         private const val CONSTANT_TAG_INVOKE_DYNAMIC = 18
 
-        fun read(reader: StreamReader): ClassInfo {
-            val magicNumber = reader.readInt()
+        fun read(input: DataInputStream): ClassInfo {
+            val magicNumber = input.readInt()
             if (magicNumber != MAGIC_NUMBER) {
-                error("Not a java class file, expected $MAGIC_NUMBER but got ${magicNumber.toString(16)}")
+                error("Not a java class file, expected $MAGIC_NUMBER but got $magicNumber")
             }
-            val minorVersion = reader.readUnsignedShort()
-            val majorVersion = reader.readUnsignedShort()
-            val constantPool = reader.readConstantPool()
-            val accessFlags = reader.readUnsignedShort()
-            val thisClass = reader.readUnsignedShort()
-            val superClass = reader.readUnsignedShort()
-            val interfaces = IntArray(reader.readUnsignedShort()) {
-                reader.readUnsignedShort()
+            val minorVersion = input.readUnsignedShort()
+            val majorVersion = input.readUnsignedShort()
+            val constantPool = input.readConstantPool()
+            val accessFlags = input.readUnsignedShort()
+            val thisClass = input.readUnsignedShort()
+            val superClass = input.readUnsignedShort()
+            val numberOfInterfaces = input.readUnsignedShort()
+            val interfaces = IntArray(numberOfInterfaces) {
+                input.readUnsignedShort()
             }
-            val fields = reader.readFields()
-            val methods = reader.readMethods()
-            val attributes = readAttributes(reader)
+            val fields = input.readFields()
+            val methods = input.readMethods()
+            val attributes = readAttributes(input)
 
             return ClassInfo(majorVersion,
                     minorVersion,
@@ -118,7 +119,7 @@ data class ClassInfo(
                     attributes)
         }
 
-        private fun StreamReader.readConstantPool(): ConstantPool {
+        private fun DataInputStream.readConstantPool(): ConstantPool {
             val constantPoolCount = readUnsignedShort()
             val constantPool = arrayOfNulls<Any?>(constantPoolCount)
             var i = 1
@@ -142,32 +143,32 @@ data class ClassInfo(
                         if (read(longBytes, 0, 4) != 4)
                             error("could not read first part of long")
 
-                        if (readUnsignedShort() != CONSTANT_TAG_LONG)
-                            error("expecting to read another constant pool for long value")
+                        val constantType = readUnsignedShort()
+                        if (constantType != CONSTANT_TAG_LONG)
+                            error("expecting to read another constant pool for long value (got $constantType)")
                         if (read(longBytes, 4, 4) != 4)
                             error("could not read second part of long")
 
                         constantPool[i] = longBytes.wrapToLong()
                         // we advance index one additional time because we are sure that the second
                         // part comes directly after
-                        i++
-                        i++
+                        i+=2
                     }
                     CONSTANT_TAG_DOUBLE -> {
                         val doubleBytes = ByteArray(8)
                         if (read(doubleBytes, 0, 4) != 4)
                             error("could not read first part of double")
 
-                        if (readUnsignedShort() != CONSTANT_TAG_LONG)
-                            error("expecting to read another constant pool for double value")
+                        val constantType = readUnsignedShort()
+                        if (constantType != CONSTANT_TAG_LONG)
+                            error("expecting to read another constant pool for double value (got $constantType)")
                         if (read(doubleBytes, 4, 4) != 4)
                             error("could not read second part of double")
 
                         constantPool[i] = doubleBytes.wrapToDouble()
                         // we advance index one additional time because we are sure that the second
                         // part comes directly after
-                        i++
-                        i++
+                        i+=2
                     }
                     CONSTANT_TAG_CLASS_REFERENCE -> {
                         constantPool[i] = ClassReference(nameIndex = readUnsignedShort())
@@ -217,19 +218,18 @@ data class ClassInfo(
                         i++
                     }
                     CONSTANT_TAG_INVOKE_DYNAMIC -> constantPool[i] = {
-                        InvokeDynamicReference(
+                        constantPool[i] = InvokeDynamicReference(
                                 bootstrapMethodAttrIndex = readUnsignedShort(),
                                 nameAndTypeIndex = readUnsignedShort()
                         )
                         i++
                     }
                 }
-
             }
             return ConstantPool(constantPool)
         }
 
-        private fun StreamReader.readMethods(): Array<MethodInfo> {
+        private fun DataInputStream.readMethods(): Array<MethodInfo> {
             return Array(readUnsignedShort()) {
                 val accessFlags = readUnsignedShort()
                 val nameIndex = readUnsignedShort()
@@ -240,7 +240,7 @@ data class ClassInfo(
             }
         }
 
-        private fun StreamReader.readFields(): Array<FieldInfo> {
+        private fun DataInputStream.readFields(): Array<FieldInfo> {
             return Array(readUnsignedShort()) {
                 val accessFlags = readUnsignedShort()
                 val nameIndex = readUnsignedShort()

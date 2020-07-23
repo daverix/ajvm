@@ -15,6 +15,6 @@ pluginManagement {
     }
 }
 
-include(":app")
-include(":core")
 include(":testdata")
+include(":core")
+include(":app")

@@ -36,11 +36,11 @@ data class AttributeInfo(val nameIndex: Int, val info: ByteArray) {
     }
 }
 
-fun readAttributes(reader: StreamReader): Array<AttributeInfo> {
-    return Array(reader.readUnsignedShort()) {
-        val nameIndex = reader.readUnsignedShort()
-        val info = ByteArray(reader.readInt())
-        reader.readFully(info)
+fun readAttributes(input: DataInputStream): Array<AttributeInfo> {
+    return Array(input.readUnsignedShort()) {
+        val nameIndex = input.readUnsignedShort()
+        val info = ByteArray(input.readInt())
+        input.readFully(info)
         AttributeInfo(nameIndex, info)
     }
 }
