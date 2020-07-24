@@ -16,9 +16,10 @@
  */
 package net.daverix.ajvm
 
+import net.daverix.ajvm.io.readClassInfo
 import net.daverix.ajvm.operation.*
 
-class ApplicationObjectLoader(private val classInfoProvider: ClassInfoProvider,
+class ApplicationObjectLoader(private val fileOpener: FileOpener,
                               private val outStream: PrintStreamObject,
                               private val errStream: PrintStreamObject) : VirtualObjectLoader {
     private val staticLoader: VirtualObjectLoader = StaticClassLoader(this)
@@ -29,7 +30,9 @@ class ApplicationObjectLoader(private val classInfoProvider: ClassInfoProvider,
             "java/lang/StringBuilder" -> return StringBuilderObject()
             "java/lang/Integer" -> return IntegerObject()
             else -> {
-                val classInfo = classInfoProvider.getClassInfo(qualifiedName)
+                val classInfo = fileOpener.openFile(qualifiedName) {
+                    readClassInfo()
+                }
                 val byteCodeOperations = mapOf(
                     Opcode.NEW to NewOperation(this@ApplicationObjectLoader, classInfo.constantPool),
                     Opcode.DUP to DupOperation(),

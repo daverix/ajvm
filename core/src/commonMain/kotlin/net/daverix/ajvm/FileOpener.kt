@@ -16,9 +16,8 @@
  */
 package net.daverix.ajvm
 
-import net.daverix.ajvm.io.ClassInfo
+import net.daverix.ajvm.io.DataInputStream
 
-
-interface ClassInfoProvider {
-    fun getClassInfo(className: String): ClassInfo
+interface FileOpener {
+    fun <T> openFile(className: String, reader: DataInputStream.()->T): T
 }

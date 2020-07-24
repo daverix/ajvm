@@ -30,7 +30,7 @@ class HelloWorldTest {
         stdOut = FakePrinter()
         stdErr = FakePrinter()
         val testClassLoader = ApplicationObjectLoader(
-                TestDataClassInfoProvider,
+                TestDataFileOpener,
                 PrintStreamObject(stdOut),
                 PrintStreamObject(stdErr)
         )

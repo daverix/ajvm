@@ -17,8 +17,6 @@
 package net.daverix.ajvm.io
 
 import net.daverix.ajvm.io.ConstantPool.Companion.readConstantPool
-import net.daverix.ajvm.wrapToDouble
-import net.daverix.ajvm.wrapToLong
 
 data class ClassInfo(
         val majorVersion: Int,
@@ -71,61 +69,59 @@ data class ClassInfo(
         result = 31 * result + attributes.contentHashCode()
         return result
     }
+}
 
-    companion object {
-        private const val MAGIC_NUMBER = -889275714 // 0xCAFEBABEu
+private const val MAGIC_NUMBER = -889275714 // 0xCAFEBABEu
 
-        fun read(input: DataInputStream): ClassInfo {
-            val magicNumber = input.readInt()
-            if (magicNumber != MAGIC_NUMBER) {
-                error("Not a java class file, expected $MAGIC_NUMBER but got $magicNumber")
-            }
-            val minorVersion = input.readUnsignedShort()
-            val majorVersion = input.readUnsignedShort()
-            val constantPool = input.readConstantPool()
-            val accessFlags = input.readUnsignedShort()
-            val thisClass = input.readUnsignedShort()
-            val superClass = input.readUnsignedShort()
-            val numberOfInterfaces = input.readUnsignedShort()
-            val interfaces = IntArray(numberOfInterfaces) {
-                input.readUnsignedShort()
-            }
-            val fields = input.readFields()
-            val methods = input.readMethods()
-            val attributes = readAttributes(input)
+fun DataInputStream.readClassInfo(): ClassInfo {
+    val magicNumber = readInt()
+    if (magicNumber != MAGIC_NUMBER) {
+        error("Not a java class file, expected $MAGIC_NUMBER but got $magicNumber")
+    }
+    val minorVersion = readUnsignedShort()
+    val majorVersion = readUnsignedShort()
+    val constantPool = readConstantPool()
+    val accessFlags = readUnsignedShort()
+    val thisClass = readUnsignedShort()
+    val superClass = readUnsignedShort()
+    val numberOfInterfaces = readUnsignedShort()
+    val interfaces = IntArray(numberOfInterfaces) {
+        readUnsignedShort()
+    }
+    val fields = readFields()
+    val methods = readMethods()
+    val attributes = readAttributes(this)
 
-            return ClassInfo(majorVersion,
-                    minorVersion,
-                    constantPool,
-                    accessFlags,
-                    thisClass,
-                    superClass,
-                    interfaces,
-                    fields,
-                    methods,
-                    attributes)
-        }
+    return ClassInfo(majorVersion,
+            minorVersion,
+            constantPool,
+            accessFlags,
+            thisClass,
+            superClass,
+            interfaces,
+            fields,
+            methods,
+            attributes)
+}
 
-        private fun DataInputStream.readMethods(): Array<MethodInfo> {
-            return Array(readUnsignedShort()) {
-                val accessFlags = readUnsignedShort()
-                val nameIndex = readUnsignedShort()
-                val descriptorIndex = readUnsignedShort()
-                val attributes = readAttributes(this)
+private fun DataInputStream.readMethods(): Array<MethodInfo> {
+    return Array(readUnsignedShort()) {
+        val accessFlags = readUnsignedShort()
+        val nameIndex = readUnsignedShort()
+        val descriptorIndex = readUnsignedShort()
+        val attributes = readAttributes(this)
 
-                MethodInfo(accessFlags, nameIndex, descriptorIndex, attributes)
-            }
-        }
+        MethodInfo(accessFlags, nameIndex, descriptorIndex, attributes)
+    }
+}
 
-        private fun DataInputStream.readFields(): Array<FieldInfo> {
-            return Array(readUnsignedShort()) {
-                val accessFlags = readUnsignedShort()
-                val nameIndex = readUnsignedShort()
-                val descriptorIndex = readUnsignedShort()
-                val attributes = readAttributes(this)
+private fun DataInputStream.readFields(): Array<FieldInfo> {
+    return Array(readUnsignedShort()) {
+        val accessFlags = readUnsignedShort()
+        val nameIndex = readUnsignedShort()
+        val descriptorIndex = readUnsignedShort()
+        val attributes = readAttributes(this)
 
-                FieldInfo(accessFlags, nameIndex, descriptorIndex, attributes)
-            }
-        }
+        FieldInfo(accessFlags, nameIndex, descriptorIndex, attributes)
     }
 }
