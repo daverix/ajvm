@@ -5,7 +5,7 @@ import net.daverix.ajvm.io.useDataInputStream
 import net.daverix.ajvm.testdata.testData
 
 object TestDataFileOpener : FileOpener {
-    override fun <T> openFile(className: String, reader: DataInputStream.()->T): T =
-            testData[className]?.useDataInputStream(reader)
-            ?: error("cannot find $className")
+    override fun <T> openFile(path: String, reader: DataInputStream.()->T): T =
+            testData[path]?.useDataInputStream(reader)
+            ?: error("cannot find $path")
 }

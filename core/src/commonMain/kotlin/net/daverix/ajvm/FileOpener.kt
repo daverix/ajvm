@@ -19,5 +19,5 @@ package net.daverix.ajvm
 import net.daverix.ajvm.io.DataInputStream
 
 interface FileOpener {
-    fun <T> openFile(className: String, reader: DataInputStream.()->T): T
+    fun <T> openFile(path: String, reader: DataInputStream.()->T): T
 }
