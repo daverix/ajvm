@@ -33,5 +33,13 @@ class OperandStack(private val maxStackDepth: Int) {
         } else null
     }
 
+    fun popMultiple(count: Int): Array<Any?> {
+        val array = arrayOfNulls<Any?>(count)
+        for(i in count-1 downTo 0) {
+            array[i] = pop()
+        }
+        return array
+    }
+
     fun peek() = operandStack.lastOrNull()
 }
