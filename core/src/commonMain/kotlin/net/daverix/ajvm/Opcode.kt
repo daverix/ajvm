@@ -681,12 +681,12 @@ enum class Opcode(val byteCode: Int) {
     LOR(0x81),
 
     /**
-     * bitwise OR of two ints
+     * bitwise XOR of two ints
      */
     IXOR(0x82),
 
     /**
-     * bitwise OR of two longs
+     * bitwise XOR of two longs
      */
     LXOR(0x83),
 
@@ -1104,22 +1104,5 @@ enum class Opcode(val byteCode: Int) {
     IMPDEP2(0xff);
 }
 
-fun fromByteCode(code: Int) = Opcode.values().first { it.byteCode == code }
-
-fun visualize(code: ByteArray): String {
-    val builder = StringBuilder()
-    val reader = ByteCodeReader(code)
-    while (reader.canReadByte()) {
-        val unsignedByte = reader.readUnsignedByte()
-        val bytecode = Opcode.values().firstOrNull { it.byteCode == unsignedByte }
-        builder.append(bytecode?.name).append(" ")
-
-        when (bytecode) {
-            Opcode.NEW, Opcode.GETSTATIC, Opcode.INVOKEVIRTUAL, Opcode.INVOKESPECIAL -> builder.append(reader.readUnsignedShort()).append("\n")
-            Opcode.LDC, Opcode.ILOAD, Opcode.LLOAD, Opcode.FLOAD, Opcode.DLOAD, Opcode.ALOAD -> builder.append(reader.readUnsignedByte()).append("\n")
-            else -> builder.append("\n")
-        }
-    }
-
-    return builder.toString()
-}
+private val mappedOpcodes = Opcode.values().map { it.byteCode to it }.toMap()
+fun fromByteCode(byteCode: Int) = mappedOpcodes[byteCode]
