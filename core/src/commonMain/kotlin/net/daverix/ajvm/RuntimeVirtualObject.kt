@@ -346,12 +346,11 @@ class RuntimeVirtualObject(
 
         val offsetWidth = high - low + 1
         val table = IntArray(offsetWidth) { reader.readInt() }
-        val tableIndex = stack.pop() as Int
-        val targetAddress = if (tableIndex < low || tableIndex > high) {
-            // TODO: why would Math.abs be needed to turn for example -120 into 120 here?
-            byteCodeIndex + abs(defaultValue)
+        val index = stack.pop() as Int
+        val targetAddress = if (index < low || index > high) {
+            byteCodeIndex + defaultValue
         } else {
-            byteCodeIndex + table[tableIndex - low]
+            byteCodeIndex + table[index - low]
         }
         reader.jumpTo(targetAddress)
     }

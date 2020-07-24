@@ -49,10 +49,11 @@ class ByteCodeReader(private val code: ByteArray) {
         if (!canRead(4))
             error("Cannot read int, reached end of array")
 
-        return code[index++].toInt() shl 24 or
-                (code[index++].toInt() shl 16) or
-                (code[index++].toInt() shl 8) or
-                code[index++].toInt()
+        val byte1 = code[index++].toInt() and 0xFF
+        val byte2 = code[index++].toInt() and 0xFF
+        val byte3 = code[index++].toInt() and 0xFF
+        val byte4 = code[index++].toInt() and 0xFF
+        return (byte1 shl 24) or (byte2 shl 16) or (byte3 shl 8) or byte4
     }
 
     fun readLong(): Long {
