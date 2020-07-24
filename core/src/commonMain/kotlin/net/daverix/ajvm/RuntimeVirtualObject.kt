@@ -18,7 +18,6 @@ package net.daverix.ajvm
 
 
 import net.daverix.ajvm.io.*
-import kotlin.math.abs
 
 class RuntimeVirtualObject(
         private val classInfo: ClassInfo,
