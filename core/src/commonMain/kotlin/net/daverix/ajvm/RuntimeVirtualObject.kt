@@ -46,7 +46,11 @@ class RuntimeVirtualObject(
             val byteCode = reader.readUnsignedByte()
             when (val opcode = fromByteCode(byteCode)) {
                 Opcode.RETURN -> return null
-                Opcode.IRETURN -> return stack.pop()
+                Opcode.IRETURN -> return stack.pop() as Int
+                Opcode.LRETURN -> return stack.pop() as Long
+                Opcode.FRETURN -> return stack.pop() as Float
+                Opcode.DRETURN -> return stack.pop() as Double
+                Opcode.ARETURN -> return stack.pop()
                 Opcode.NOP -> {
                     // no operation!
                 }
@@ -647,10 +651,6 @@ class RuntimeVirtualObject(
                 }
                 Opcode.TABLESWITCH -> tableSwitch(reader, byteCodeIndex, stack)
                 Opcode.LOOKUPSWITCH -> TODO()
-                Opcode.LRETURN -> TODO()
-                Opcode.FRETURN -> TODO()
-                Opcode.DRETURN -> TODO()
-                Opcode.ARETURN -> TODO()
                 Opcode.GETSTATIC -> {
                     val staticFieldIndex = reader.readUnsignedShort()
                     stack.push(getStaticFieldValue(staticFieldIndex))
