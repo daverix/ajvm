@@ -650,7 +650,7 @@ class RuntimeVirtualObject(
                     reader.jumpTo(address)
                 }
                 Opcode.TABLESWITCH -> tableSwitch(reader, byteCodeIndex, stack)
-                Opcode.LOOKUPSWITCH -> TODO()
+                Opcode.LOOKUPSWITCH -> lookupSwitch(reader, byteCodeIndex, stack)
                 Opcode.GETSTATIC -> {
                     val staticFieldIndex = reader.readUnsignedShort()
                     stack.push(getStaticFieldValue(staticFieldIndex))
@@ -715,7 +715,7 @@ class RuntimeVirtualObject(
                 else -> {
                     val byteCodeName = opcode?.name
                     val hexCode = byteCode.toString(16)
-                    error("Unknown bytecode: $byteCodeName ($hexCode) at position ${byteCodeIndex}")
+                    error("Unknown bytecode: $byteCodeName ($hexCode) at position $byteCodeIndex")
                 }
             }
 
@@ -747,6 +747,21 @@ class RuntimeVirtualObject(
             byteCodeIndex + table[index - low]
         }
         reader.jumpTo(targetAddress)
+    }
+
+    private fun lookupSwitch(reader: ByteCodeReader, byteCodeIndex: Int, stack: OperandStack) {
+        reader.skip((byteCodeIndex + 1) % 4)
+        val defaultValue = reader.readInt()
+        val npairs = reader.readInt()
+        if(npairs < 0) error("npairs be >= 0")
+        val pairs = mutableMapOf<Int,Int>()
+        repeat(npairs) {
+            val key = reader.readInt()
+            val value = reader.readInt()
+            pairs += key to value
+        }
+        val key = stack.pop() as Int
+        reader.jumpTo(byteCodeIndex + (pairs[key] ?: defaultValue))
     }
 
     private fun invokeMethodOnInstance(instance: Any?, method: Method, methodArgs: Array<Any?>): ReturnValue {
