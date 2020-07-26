@@ -18,10 +18,9 @@ package net.daverix.ajvm
 
 
 interface VirtualObject {
-    val name: String
-    val fields: Map<String,Any>
-
     fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any?
+    fun getFieldValue(fieldName: String): Any?
+    fun setFieldValue(fieldName: String, value: Any?)
 }
 
 fun VirtualObject.invokeMain(args: Array<Any?>) {

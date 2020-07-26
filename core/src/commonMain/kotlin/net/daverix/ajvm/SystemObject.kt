@@ -16,13 +16,23 @@
  */
 package net.daverix.ajvm
 
-class SystemObject(out: PrintStreamObject,
-                   err: PrintStreamObject) : VirtualObject {
-    override val fields: Map<String, Any> = mapOf("out" to out, "err" to err)
-    override val name: String
-        get() = "java/lang/System"
-
+class SystemObject(
+        private val out: PrintStreamObject,
+        private val err: PrintStreamObject
+) : VirtualObject {
     override fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
         return null
+    }
+
+    override fun getFieldValue(fieldName: String): Any? {
+        return when (fieldName) {
+            "out" -> out
+            "err" -> err
+            else -> error("no field with name $fieldName exist")
+        }
+    }
+
+    override fun setFieldValue(fieldName: String, value: Any?) {
+        error("no fields with name $fieldName can be set")
     }
 }

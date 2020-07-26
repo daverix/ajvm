@@ -19,8 +19,6 @@ package net.daverix.ajvm
 import net.daverix.ajvm.io.Printer
 
 class PrintStreamObject(private val printer: Printer) : VirtualObject {
-    override val fields: Map<String, Any> = mapOf()
-    override val name: String = "java/io/PrintStream"
 
     override fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
         if ("println" == name && "(Ljava/lang/String;)V" == descriptor) {
@@ -32,5 +30,13 @@ class PrintStreamObject(private val printer: Printer) : VirtualObject {
         }
 
         error("\"$name$descriptor\" not implemented")
+    }
+
+    override fun getFieldValue(fieldName: String): Any? {
+        throw UnsupportedOperationException("not supported in PrintStreamObject?")
+    }
+
+    override fun setFieldValue(fieldName: String, value: Any?) {
+        error("no fields with name $fieldName can be set")
     }
 }

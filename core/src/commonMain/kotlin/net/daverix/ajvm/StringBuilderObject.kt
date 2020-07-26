@@ -18,8 +18,6 @@ package net.daverix.ajvm
 
 class StringBuilderObject : VirtualObject {
     private var builder: StringBuilder? = null
-    override val fields: Map<String, Any> = mapOf()
-    override val name: String = "java/lang/StringBuilder"
 
     override fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
         return when (name) {
@@ -34,5 +32,13 @@ class StringBuilderObject : VirtualObject {
             "toString" -> builder!!.toString()
             else -> throw UnsupportedOperationException("method $name not implemented in StringBuilderObject")
         }
+    }
+
+    override fun getFieldValue(fieldName: String): Any? {
+        error("no field with name $fieldName exist")
+    }
+
+    override fun setFieldValue(fieldName: String, value: Any?) {
+        error("no field with name $fieldName exist")
     }
 }

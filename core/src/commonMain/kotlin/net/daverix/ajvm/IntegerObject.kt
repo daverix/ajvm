@@ -17,11 +17,7 @@
 package net.daverix.ajvm
 
 class IntegerObject : VirtualObject {
-    override val fields: Map<String, Any> = mapOf()
     private var integer: Int? = null
-
-    override val name: String
-        get() = "java/lang/Integer"
 
     override fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
         return when {
@@ -33,5 +29,13 @@ class IntegerObject : VirtualObject {
             }
             else -> null
         }
+    }
+
+    override fun getFieldValue(fieldName: String): Any? {
+        error("no field with name $fieldName exist")
+    }
+
+    override fun setFieldValue(fieldName: String, value: Any?) {
+        error("no field with name $fieldName exist")
     }
 }

@@ -24,9 +24,7 @@ class RuntimeVirtualObject(
         private val classLoader: VirtualObjectLoader,
         private val staticLoader: VirtualObjectLoader
 ) : VirtualObject {
-    override val fields: Map<String, Any> = HashMap()
-    override val name: String
-        get() = classInfo.name
+    private val fields: MutableMap<String, Any?> = mutableMapOf()
 
     override fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
         val method = getMethodByNameAndDescriptor(name, descriptor)
@@ -652,10 +650,25 @@ class RuntimeVirtualObject(
                 Opcode.TABLESWITCH -> tableSwitch(reader, byteCodeIndex, stack)
                 Opcode.LOOKUPSWITCH -> lookupSwitch(reader, byteCodeIndex, stack)
                 Opcode.GETSTATIC -> {
-                    val staticFieldIndex = reader.readUnsignedShort()
-                    stack.push(getStaticFieldValue(staticFieldIndex))
+                    val index = reader.readUnsignedShort()
+                    val fieldReference = classInfo.constantPool[index] as FieldReference
+                    val staticClass = getStaticClassByClassIndex(fieldReference.classIndex)
+
+                    val fieldNameAndType = classInfo.constantPool[fieldReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
+                    val fieldName = classInfo.constantPool[fieldNameAndType.nameIndex] as String
+                    stack.push(staticClass.getFieldValue(fieldName))
                 }
-                Opcode.PUTSTATIC -> TODO()
+                Opcode.PUTSTATIC -> {
+                    val index = reader.readUnsignedShort()
+                    val fieldReference = classInfo.constantPool[index] as FieldReference
+                    val staticClass = getStaticClassByClassIndex(fieldReference.classIndex)
+
+                    val fieldNameAndType = classInfo.constantPool[fieldReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
+                    val fieldName = classInfo.constantPool[fieldNameAndType.nameIndex] as String
+                    val value = stack.pop()
+
+                    staticClass.setFieldValue(fieldName, value)
+                }
                 Opcode.GETFIELD -> TODO()
                 Opcode.PUTFIELD -> TODO()
                 Opcode.INVOKEVIRTUAL -> {
@@ -722,6 +735,14 @@ class RuntimeVirtualObject(
         }
 
         return null
+    }
+
+    override fun getFieldValue(fieldName: String): Any? {
+        return fields[fieldName]
+    }
+
+    override fun setFieldValue(fieldName: String, value: Any?) {
+        fields[fieldName] = value
     }
 
     private fun Any?.getComputationalTypeCategory(): Int = when (this) {
@@ -798,16 +819,11 @@ class RuntimeVirtualObject(
         return classLoader.load(className)
     }
 
-    private fun getStaticFieldValue(staticFieldIndex: Int): Any? {
-        val fieldReference = classInfo.constantPool[staticFieldIndex] as FieldReference
-        val fieldNameAndType = classInfo.constantPool[fieldReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
-        val fieldName = classInfo.constantPool[fieldNameAndType.nameIndex] as String
+    private fun getStaticClassByClassIndex(classIndex: Int): VirtualObject {
+        val classReference = classInfo.constantPool[classIndex] as ClassReference
+        val className = classInfo.constantPool[classReference.nameIndex] as String
 
-        val classReference = classInfo.constantPool[fieldReference.classIndex] as ClassReference
-        val fieldClassName = classInfo.constantPool[classReference.nameIndex] as String
-
-        val staticClass = staticLoader.load(fieldClassName)
-        return staticClass.fields[fieldName]
+        return staticLoader.load(className)
     }
 
     private operator fun Array<AttributeInfo>.get(name: String): AttributeInfo {
