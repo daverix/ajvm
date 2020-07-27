@@ -654,23 +654,34 @@ class RuntimeVirtualObject(
                     val fieldReference = classInfo.constantPool[index] as FieldReference
                     val staticClass = getStaticClassByClassIndex(fieldReference.classIndex)
 
-                    val fieldNameAndType = classInfo.constantPool[fieldReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
-                    val fieldName = classInfo.constantPool[fieldNameAndType.nameIndex] as String
-                    stack.push(staticClass.getFieldValue(fieldName))
+                    val value = getInstanceFieldValue(staticClass, fieldReference)
+                    stack.push(value)
                 }
                 Opcode.PUTSTATIC -> {
                     val index = reader.readUnsignedShort()
+                    val value = stack.pop()
+
                     val fieldReference = classInfo.constantPool[index] as FieldReference
                     val staticClass = getStaticClassByClassIndex(fieldReference.classIndex)
 
-                    val fieldNameAndType = classInfo.constantPool[fieldReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
-                    val fieldName = classInfo.constantPool[fieldNameAndType.nameIndex] as String
-                    val value = stack.pop()
-
-                    staticClass.setFieldValue(fieldName, value)
+                    setInstanceFieldValue(staticClass, fieldReference, value)
                 }
-                Opcode.GETFIELD -> TODO()
-                Opcode.PUTFIELD -> TODO()
+                Opcode.GETFIELD -> {
+                    val index = reader.readUnsignedShort()
+                    val instance = stack.pop() as VirtualObject
+
+                    val fieldReference = classInfo.constantPool[index] as FieldReference
+                    val value = getInstanceFieldValue(instance, fieldReference)
+                    stack.push(value)
+                }
+                Opcode.PUTFIELD -> {
+                    val index = reader.readUnsignedShort()
+                    val value = stack.pop()
+                    val instance = stack.pop() as VirtualObject
+
+                    val fieldReference = classInfo.constantPool[index] as FieldReference
+                    setInstanceFieldValue(instance, fieldReference, value)
+                }
                 Opcode.INVOKEVIRTUAL -> {
                     val methodReferenceIndex = reader.readUnsignedShort()
                     val otherMethod = getMethod(classInfo.constantPool, methodReferenceIndex)
@@ -735,6 +746,20 @@ class RuntimeVirtualObject(
         }
 
         return null
+    }
+
+    private fun getInstanceFieldValue(instance: VirtualObject, fieldReference: FieldReference): Any? {
+        val fieldNameAndType = classInfo.constantPool[fieldReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
+        val fieldName = classInfo.constantPool[fieldNameAndType.nameIndex] as String
+        val value = instance.getFieldValue(fieldName)
+        return value
+    }
+
+    private fun setInstanceFieldValue(instance: VirtualObject, fieldReference: FieldReference, value: Any?) {
+        val fieldNameAndType = classInfo.constantPool[fieldReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
+        val fieldName = classInfo.constantPool[fieldNameAndType.nameIndex] as String
+
+        instance.setFieldValue(fieldName, value)
     }
 
     override fun getFieldValue(fieldName: String): Any? {
