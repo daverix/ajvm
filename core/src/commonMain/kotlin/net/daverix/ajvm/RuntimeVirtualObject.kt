@@ -21,8 +21,8 @@ import net.daverix.ajvm.io.*
 
 class RuntimeVirtualObject(
         private val classInfo: ClassInfo,
-        private val classLoader: VirtualObjectLoader,
-        private val staticLoader: VirtualObjectLoader
+        private val loadObject: (String)->VirtualObject,
+        private val loadStaticObject: (String)->VirtualObject
 ) : VirtualObject {
     private val fields: MutableMap<String, Any?> = mutableMapOf()
 
@@ -708,7 +708,7 @@ class RuntimeVirtualObject(
                     val methodReferenceIndex = reader.readUnsignedShort()
                     val otherMethod = getMethod(classInfo.constantPool, methodReferenceIndex)
                     val methodArgs = stack.popMultiple(otherMethod.descriptor.parameters.size)
-                    val staticClass = staticLoader.load(otherMethod.className)
+                    val staticClass = loadStaticObject(otherMethod.className)
                     val returnValue = invokeMethodOnInstance(staticClass, otherMethod, methodArgs)
                     if (returnValue is ReturnValue.Value) {
                         stack.push(returnValue.value)
@@ -841,14 +841,14 @@ class RuntimeVirtualObject(
         val classRef = classInfo.constantPool[newObjectIndex] as ClassReference
         val className = classInfo.constantPool[classRef.nameIndex] as String
 
-        return classLoader.load(className)
+        return loadObject(className)
     }
 
     private fun getStaticClassByClassIndex(classIndex: Int): VirtualObject {
         val classReference = classInfo.constantPool[classIndex] as ClassReference
         val className = classInfo.constantPool[classReference.nameIndex] as String
 
-        return staticLoader.load(className)
+        return loadStaticObject(className)
     }
 
     private operator fun Array<AttributeInfo>.get(name: String): AttributeInfo {

@@ -18,22 +18,31 @@ package net.daverix.ajvm
 
 import net.daverix.ajvm.io.readClassInfo
 
-class ApplicationObjectLoader(private val fileOpener: FileOpener,
-                              private val outStream: PrintStreamObject,
-                              private val errStream: PrintStreamObject) : VirtualObjectLoader {
-    private val staticLoader: VirtualObjectLoader = StaticClassLoader(this)
-
-    override fun load(qualifiedName: String): VirtualObject {
-        return when (qualifiedName) {
-            "java/lang/System" -> SystemObject(outStream, errStream)
-            "java/lang/StringBuilder" -> StringBuilderObject()
-            "java/lang/Integer" -> IntegerObject()
-            else -> {
-                val classInfo = fileOpener.openFile(qualifiedName) {
+class ApplicationObjectLoader(
+        private val fileOpener: FileOpener,
+        private val outStream: PrintStreamObject,
+        private val errStream: PrintStreamObject,
+        private val staticObjects: MutableMap<String, VirtualObject> = mutableMapOf()
+) {
+    fun load(qualifiedName: String): VirtualObject = when (qualifiedName) {
+        "java/lang/System" -> SystemObject(outStream, errStream)
+        "java/lang/StringBuilder" -> StringBuilderObject()
+        "java/lang/Integer" -> IntegerObject()
+        else -> RuntimeVirtualObject(
+                classInfo = fileOpener.openFile(qualifiedName) {
                     readClassInfo()
-                }
-                RuntimeVirtualObject(classInfo, this, staticLoader)
-            }
+                },
+                loadObject = ::load,
+                loadStaticObject = ::loadStatic
+        )
+    }
+
+    private fun loadStatic(qualifiedName: String): VirtualObject {
+        var staticObject: VirtualObject? = staticObjects[qualifiedName]
+        if (staticObject == null) {
+            staticObject = load(qualifiedName)
+            staticObjects[qualifiedName] = staticObject
         }
+        return staticObject
     }
 }
