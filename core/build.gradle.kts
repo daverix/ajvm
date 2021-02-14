@@ -1,14 +1,14 @@
 import net.daverix.ajvm.plugin.GenerateTestDataTask
 
 plugins {
-    id("org.jetbrains.kotlin.multiplatform") version "1.3.72"
+    id("org.jetbrains.kotlin.multiplatform") version "1.4.30"
 }
 
 val testDataDir = file("$buildDir/testdata")
 
 kotlin {
     jvm()
-    js {
+    js(IR) {
         browser()
     }
 

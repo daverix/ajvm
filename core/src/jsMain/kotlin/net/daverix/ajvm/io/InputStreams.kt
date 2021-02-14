@@ -26,7 +26,6 @@ actual open class DataInputStream(private val dataView: DataView) {
         return value
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     actual fun readUTF(): String {
         val utf8Length: Int = readUnsignedShort()
         val byteArray = ByteArray(utf8Length)
