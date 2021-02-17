@@ -16,26 +16,28 @@
  */
 package net.daverix.ajvm
 
-class IntegerObject : VirtualObject {
-    private var integer: Int? = null
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
-    override fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
-        return when {
-            name == "<init>" -> {
-                integer = args[0] as Int?
-            }
-            name == "parseInt" && descriptor == "(Ljava/lang/String;)I" && args.size == 1 -> {
-                args[0].toString().toInt()
-            }
-            else -> null
-        }
+class EchoTest {
+    private lateinit var stdOut: FakePrinter
+    private lateinit var stdErr: FakePrinter
+    private lateinit var stdIn: FakePrinter
+    private lateinit var sut: VirtualMachine
+
+    @BeforeTest
+    fun setUp() {
+        stdOut = FakePrinter()
+        stdErr = FakePrinter()
+        sut = VirtualMachine(testClassInfoProvider)
     }
 
-    override fun getFieldValue(fieldName: String): Any? {
-        error("no field with name $fieldName exist")
-    }
+    @Test
+    fun run() = runBlockingTest {
+        sut.run("net/daverix/ajvm/test/Echo")
 
-    override fun setFieldValue(fieldName: String, value: Any?) {
-        error("no field with name $fieldName exist")
+        //Note! We call println so the string ends with \n
+        assertEquals("Hello World!\n", stdOut.output)
     }
 }

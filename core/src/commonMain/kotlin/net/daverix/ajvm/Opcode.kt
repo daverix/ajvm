@@ -1105,4 +1105,5 @@ enum class Opcode(val byteCode: Int) {
 }
 
 private val mappedOpcodes = Opcode.values().map { it.byteCode to it }.toMap()
-fun fromByteCode(byteCode: Int) = mappedOpcodes[byteCode]
+
+fun fromByteCode(byteCode: Int) = mappedOpcodes[byteCode] ?: error("unknown byte code: 0x${byteCode.toString(16)}")

@@ -19,7 +19,7 @@ package net.daverix.ajvm
 class StringBuilderObject : VirtualObject {
     private var builder: StringBuilder? = null
 
-    override fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
+    override suspend fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
         return when (name) {
             "<init>" -> {
                 builder = StringBuilder()

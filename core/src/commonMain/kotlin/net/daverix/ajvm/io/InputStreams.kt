@@ -9,6 +9,7 @@ expect open class DataInputStream {
     fun readFloat(): Float
     fun read(bytes: ByteArray, offset: Int, length: Int): Int
     fun read(bytes: ByteArray): Int
+    fun skipBytes(count: Int): Int
 }
 
 expect fun <T> ByteArray.useDataInputStream(func: (DataInputStream)->T): T

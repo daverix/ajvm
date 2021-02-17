@@ -18,12 +18,12 @@ package net.daverix.ajvm
 
 
 interface VirtualObject {
-    fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any?
+    suspend fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any?
     fun getFieldValue(fieldName: String): Any?
     fun setFieldValue(fieldName: String, value: Any?)
 }
 
-fun VirtualObject.invokeMain(args: Array<Any?>) {
+suspend fun VirtualObject.invokeMain(args: Array<out Any?>) {
     //TODO: why do we have array of array here?
     invokeMethod("main", "([Ljava/lang/String;)V", arrayOf(args))
 }

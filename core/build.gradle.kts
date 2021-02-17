@@ -5,6 +5,19 @@ plugins {
 }
 
 val testDataDir = file("$buildDir/testdata")
+val testConfig by configurations.creating
+
+dependencies {
+    attributesSchema {
+        attribute(Usage.USAGE_ATTRIBUTE)
+    }
+
+    testConfig(project(":testdata")) {
+        attributes {
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+        }
+    }
+}
 
 kotlin {
     jvm()
@@ -17,6 +30,7 @@ kotlin {
             val commonMain by getting {
                 dependencies {
                     implementation(kotlin("stdlib-common"))
+                    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
                 }
             }
             val commonTest by getting {
@@ -46,6 +60,7 @@ kotlin {
             val jvmTest by getting {
                 dependencies {
                     implementation(kotlin("test-junit"))
+                    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.4.2")
                 }
             }
         }
@@ -53,21 +68,16 @@ kotlin {
 }
 
 tasks {
-    val generateTask = register(
-            "generateTestDataFiles",
-            GenerateTestDataTask::class,
-            file("$rootDir/testdata/build/classes/java/main"),
-            testDataDir
-    )
-    generateTask.configure {
-        dependsOn(":testdata:classes")
+    val generateTestDataFiles by registering(GenerateTestDataTask::class) {
+        config.set(testConfig)
+        outputDir.set(testDataDir)
     }
 
     named("compileTestKotlinJs") {
-        dependsOn(generateTask)
+        dependsOn(generateTestDataFiles)
     }
 
     named("compileTestKotlinJvm") {
-        dependsOn(generateTask)
+        dependsOn(generateTestDataFiles)
     }
 }

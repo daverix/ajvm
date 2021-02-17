@@ -21,16 +21,17 @@ import net.daverix.ajvm.io.*
 
 class RuntimeVirtualObject(
         private val classInfo: ClassInfo,
-        private val loadObject: (String)->VirtualObject,
-        private val loadStaticObject: (String)->VirtualObject
+        private val loadObject: suspend (String) -> VirtualObject,
+        private val loadStaticObject: suspend (String) -> VirtualObject
 ) : VirtualObject {
     private val fields: MutableMap<String, Any?> = mutableMapOf()
 
-    override fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
+    override suspend fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
         val method = getMethodByNameAndDescriptor(name, descriptor)
                 ?: error("Cannot find method $name in class ${classInfo.name}")
 
-        val (maxStack, maxLocals, code) = method.attributes["Code"].info.useDataInputStream { CodeAttribute.read(it) }
+        val (maxStack, maxLocals, code, byteCodeTable) = method.codeAttribute
+                ?: error("code attribute not found")
         val stack = OperandStack(maxStack)
 
         val localVariables: Array<Any?> = arrayOfNulls(maxLocals)
@@ -38,201 +39,144 @@ class RuntimeVirtualObject(
             localVariables[i] = args[i]
         }
 
-        val reader = ByteCodeReader(code)
-        while (reader.canReadByte()) {
-            val byteCodeIndex = reader.index
-            val byteCode = reader.readUnsignedByte()
-            when (val opcode = fromByteCode(byteCode)) {
-                Opcode.RETURN -> return null
-                Opcode.IRETURN -> return stack.pop() as Int
-                Opcode.LRETURN -> return stack.pop() as Long
-                Opcode.FRETURN -> return stack.pop() as Float
-                Opcode.DRETURN -> return stack.pop() as Double
-                Opcode.ARETURN -> return stack.pop()
-                Opcode.NOP -> {
+        var index = 0
+        while (index < code.size) {
+            when (val operation = code[index]) {
+                Operation.Return -> return null
+                Operation.IReturn -> return stack.pop() as Int
+                Operation.LReturn -> return stack.pop() as Long
+                Operation.FReturn -> return stack.pop() as Float
+                Operation.DReturn -> return stack.pop() as Double
+                Operation.AReturn -> return stack.pop()
+                Operation.NOP -> {
                     // no operation!
                 }
-                Opcode.ACONST_NULL -> stack.push(null)
-                Opcode.ICONST_M1 -> stack.push(-1)
-                Opcode.ICONST_0 -> stack.push(0)
-                Opcode.ICONST_1 -> stack.push(1)
-                Opcode.ICONST_2 -> stack.push(2)
-                Opcode.ICONST_3 -> stack.push(3)
-                Opcode.ICONST_4 -> stack.push(4)
-                Opcode.ICONST_5 -> stack.push(5)
-                Opcode.LCONST_0 -> stack.push(0L)
-                Opcode.LCONST_1 -> stack.push(1L)
-                Opcode.FCONST_0 -> stack.push(0f)
-                Opcode.FCONST_1 -> stack.push(1f)
-                Opcode.FCONST_2 -> stack.push(2f)
-                Opcode.DCONST_0 -> stack.push(0.0)
-                Opcode.DCONST_1 -> stack.push(1.0)
-                Opcode.BI_PUSH -> stack.push(reader.readUnsignedByte())
-                Opcode.SI_PUSH -> stack.push(reader.readUnsignedShort())
-                Opcode.LDC -> stack.push(ldc(reader.readUnsignedByte()))
-                Opcode.LDC_W -> stack.push(ldc(reader.readUnsignedShort()))
-                Opcode.LDC2_W -> {
-                    val constant = classInfo.constantPool[reader.readUnsignedShort()]
+                Operation.AConstNull -> stack.push(null)
+                is Operation.IConst -> stack.push(operation.value)
+                is Operation.LConst -> stack.push(operation.value)
+                is Operation.FConst -> stack.push(operation.value)
+                is Operation.DConst -> stack.push(operation.value)
+                is Operation.Ldc -> stack.push(ldc(operation.index))
+                is Operation.Ldc2 -> {
+                    val constant = classInfo.constantPool[operation.index]
                     if (constant !is Long && constant !is Double)
                         error("expected $constant to be double or long")
 
                     stack.push(constant)
                 }
-                Opcode.ILOAD -> stack.push(localVariables[reader.readUnsignedByte()] as Int)
-                Opcode.LLOAD -> stack.push(localVariables[reader.readUnsignedByte()] as Long)
-                Opcode.FLOAD -> stack.push(localVariables[reader.readUnsignedByte()] as Float)
-                Opcode.DLOAD -> stack.push(localVariables[reader.readUnsignedByte()] as Double)
-                Opcode.ALOAD -> stack.push(localVariables[reader.readUnsignedByte()])
-                Opcode.ILOAD_0 -> stack.push(localVariables[0] as Int)
-                Opcode.ILOAD_1 -> stack.push(localVariables[1] as Int)
-                Opcode.ILOAD_2 -> stack.push(localVariables[2] as Int)
-                Opcode.ILOAD_3 -> stack.push(localVariables[3] as Int)
-                Opcode.LLOAD_0 -> stack.push(localVariables[0] as Long)
-                Opcode.LLOAD_1 -> stack.push(localVariables[1] as Long)
-                Opcode.LLOAD_2 -> stack.push(localVariables[2] as Long)
-                Opcode.LLOAD_3 -> stack.push(localVariables[3] as Long)
-                Opcode.FLOAD_0 -> stack.push(localVariables[0] as Float)
-                Opcode.FLOAD_1 -> stack.push(localVariables[1] as Float)
-                Opcode.FLOAD_2 -> stack.push(localVariables[2] as Float)
-                Opcode.FLOAD_3 -> stack.push(localVariables[3] as Float)
-                Opcode.DLOAD_0 -> stack.push(localVariables[0] as Double)
-                Opcode.DLOAD_1 -> stack.push(localVariables[1] as Double)
-                Opcode.DLOAD_2 -> stack.push(localVariables[2] as Double)
-                Opcode.DLOAD_3 -> stack.push(localVariables[3] as Double)
-                Opcode.ALOAD_0 -> stack.push(localVariables[0])
-                Opcode.ALOAD_1 -> stack.push(localVariables[1])
-                Opcode.ALOAD_2 -> stack.push(localVariables[2])
-                Opcode.ALOAD_3 -> stack.push(localVariables[3])
-                Opcode.IALOAD -> {
-                    val index = stack.pop() as Int
+                is Operation.ILoad -> stack.push(localVariables[operation.index] as Int)
+                is Operation.LLoad -> stack.push(localVariables[operation.index] as Long)
+                is Operation.FLoad -> stack.push(localVariables[operation.index] as Float)
+                is Operation.DLoad -> stack.push(localVariables[operation.index] as Double)
+                is Operation.ALoad -> stack.push(localVariables[operation.index])
+                Operation.IALoad -> {
+                    val arrayIndex = stack.pop() as Int
+                    val array = stack.pop() as IntArray
+                    stack.push(array[arrayIndex])
+                }
+                Operation.LALoad -> {
+                    val arrayIndex = stack.pop() as Int
+                    val array = stack.pop() as LongArray
+                    stack.push(array[arrayIndex])
+                }
+                Operation.FALoad -> {
+                    val arrayIndex = stack.pop() as Int
+                    val array = stack.pop() as FloatArray
+                    stack.push(array[arrayIndex])
+                }
+                Operation.DALoad -> {
+                    val arrayIndex = stack.pop() as Int
+                    val array = stack.pop() as DoubleArray
+                    stack.push(array[arrayIndex])
+                }
+                Operation.AALoad -> {
+                    val arrayIndex = stack.pop() as Int
                     val array = stack.pop() as Array<*>
-                    stack.push(array[index] as Int)
+                    stack.push(array[arrayIndex])
                 }
-                Opcode.LALOAD -> {
-                    val index = stack.pop() as Int
-                    val array = stack.pop() as Array<*>
-                    stack.push(array[index] as Long)
-                }
-                Opcode.FALOAD -> {
-                    val index = stack.pop() as Int
-                    val array = stack.pop() as Array<*>
-                    stack.push(array[index] as Float)
-                }
-                Opcode.DALOAD -> {
-                    val index = stack.pop() as Int
-                    val array = stack.pop() as Array<*>
-                    stack.push(array[index] as Double)
-                }
-                Opcode.AALOAD -> {
-                    val index = stack.pop() as Int
-                    val array = stack.pop() as Array<*>
-                    stack.push(array[index])
-                }
-                Opcode.BALOAD -> {
-                    val index = stack.pop() as Int
-                    val array = stack.pop() as Array<*>
-                    val value = array[index]
-                    if (value !is Byte && value !is Boolean)
-                        error("expected $value to be byte or boolean")
-
-                    stack.push(value)
-                }
-                Opcode.CALOAD -> {
-                    val index = stack.pop() as Int
-                    val array = stack.pop() as Array<*>
-                    stack.push(array[index] as Char)
-                }
-                Opcode.SALOAD -> {
-                    val index = stack.pop() as Int
-                    val array = stack.pop() as Array<*>
-                    stack.push(array[index] as Short)
-                }
-                Opcode.ISTORE -> localVariables[reader.readUnsignedByte()] = stack.pop() as Int
-                Opcode.LSTORE -> localVariables[reader.readUnsignedByte()] = stack.pop() as Long
-                Opcode.FSTORE -> localVariables[reader.readUnsignedByte()] = stack.pop() as Float
-                Opcode.DSTORE -> localVariables[reader.readUnsignedByte()] = stack.pop() as Double
-                Opcode.ASTORE -> localVariables[reader.readUnsignedByte()] = stack.pop()
-                Opcode.ISTORE_0 -> localVariables[0] = stack.pop() as Int
-                Opcode.ISTORE_1 -> localVariables[1] = stack.pop() as Int
-                Opcode.ISTORE_2 -> localVariables[2] = stack.pop() as Int
-                Opcode.ISTORE_3 -> localVariables[3] = stack.pop() as Int
-                Opcode.LSTORE_0 -> localVariables[0] = stack.pop() as Long
-                Opcode.LSTORE_1 -> localVariables[1] = stack.pop() as Long
-                Opcode.LSTORE_2 -> localVariables[2] = stack.pop() as Long
-                Opcode.LSTORE_3 -> localVariables[3] = stack.pop() as Long
-                Opcode.FSTORE_0 -> localVariables[0] = stack.pop() as Float
-                Opcode.FSTORE_1 -> localVariables[1] = stack.pop() as Float
-                Opcode.FSTORE_2 -> localVariables[2] = stack.pop() as Float
-                Opcode.FSTORE_3 -> localVariables[3] = stack.pop() as Float
-                Opcode.DSTORE_0 -> localVariables[0] = stack.pop() as Double
-                Opcode.DSTORE_1 -> localVariables[1] = stack.pop() as Double
-                Opcode.DSTORE_2 -> localVariables[2] = stack.pop() as Double
-                Opcode.DSTORE_3 -> localVariables[3] = stack.pop() as Double
-                Opcode.ASTORE_0 -> localVariables[0] = stack.pop()
-                Opcode.ASTORE_1 -> localVariables[1] = stack.pop()
-                Opcode.ASTORE_2 -> localVariables[2] = stack.pop()
-                Opcode.ASTORE_3 -> localVariables[3] = stack.pop()
-                Opcode.IASTORE -> {
-                    val value = stack.pop() as Int
-                    val index = stack.pop() as Int
-                    @Suppress("UNCHECKED_CAST") val array = stack.pop() as Array<Int>
-                    array[index] = value
-                }
-                Opcode.LASTORE -> {
-                    val value = stack.pop() as Long
-                    val index = stack.pop() as Int
-                    @Suppress("UNCHECKED_CAST") val array = stack.pop() as Array<Long>
-                    array[index] = value
-                }
-                Opcode.FASTORE -> {
-                    val value = stack.pop() as Float
-                    val index = stack.pop() as Int
-                    @Suppress("UNCHECKED_CAST") val array = stack.pop() as Array<Float>
-                    array[index] = value
-                }
-                Opcode.DASTORE -> {
-                    val value = stack.pop() as Double
-                    val index = stack.pop() as Int
-                    @Suppress("UNCHECKED_CAST") val array = stack.pop() as Array<Double>
-                    array[index] = value
-                }
-                Opcode.AASTORE -> {
-                    val value = stack.pop()
-                    val index = stack.pop() as Int
-                    @Suppress("UNCHECKED_CAST") val array = stack.pop() as Array<Any?>
-                    array[index] = value
-                }
-                Opcode.BASTORE -> {
-                    val value = stack.pop()
-                    val index = stack.pop() as Int
-                    val array = stack.pop()
-                    @Suppress("UNCHECKED_CAST")
-                    when (value) {
-                        is Boolean -> (array as Array<Boolean>)[index] = value
-                        is Byte -> (array as Array<Byte>)[index] = value
-                        else -> error("$value is not a boolean or a byte")
+                Operation.BALoad -> {
+                    val arrayIndex = stack.pop() as Int
+                    when (val array = stack.pop()) {
+                        is ByteArray -> stack.push(array[arrayIndex].toInt())
+                        is BooleanArray -> stack.push(if (array[arrayIndex]) 1 else 0)
+                        else -> error("expected array to be of type byte or boolean")
                     }
                 }
-                Opcode.CASTORE -> {
+                Operation.CALoad -> {
+                    val arrayIndex = stack.pop() as Int
+                    val array = stack.pop() as CharArray
+                    stack.push(array[arrayIndex])
+                }
+                Operation.SALoad -> {
+                    val arrayIndex = stack.pop() as Int
+                    val array = stack.pop() as ShortArray
+                    stack.push(array[arrayIndex])
+                }
+                is Operation.IStore -> localVariables[operation.index] = stack.pop() as Int
+                is Operation.LStore -> localVariables[operation.index] = stack.pop() as Long
+                is Operation.FStore -> localVariables[operation.index] = stack.pop() as Float
+                is Operation.DStore -> localVariables[operation.index] = stack.pop() as Double
+                is Operation.AStore -> localVariables[operation.index] = stack.pop()
+                Operation.IAStore -> {
+                    val value = stack.pop() as Int
+                    val arrayIndex = stack.pop() as Int
+                    val array = stack.pop() as IntArray
+                    array[arrayIndex] = value
+                }
+                Operation.LAStore -> {
+                    val value = stack.pop() as Long
+                    val arrayIndex = stack.pop() as Int
+                    val array = stack.pop() as LongArray
+                    array[arrayIndex] = value
+                }
+                Operation.FAStore -> {
+                    val value = stack.pop() as Float
+                    val arrayIndex = stack.pop() as Int
+                    val array = stack.pop() as FloatArray
+                    array[arrayIndex] = value
+                }
+                Operation.DAStore -> {
+                    val value = stack.pop() as Double
+                    val arrayIndex = stack.pop() as Int
+                    val array = stack.pop() as DoubleArray
+                    array[arrayIndex] = value
+                }
+                Operation.AAStore -> {
+                    val value = stack.pop()
+                    val arrayIndex = stack.pop() as Int
+                    @Suppress("UNCHECKED_CAST") val array = stack.pop() as Array<Any?>
+                    array[arrayIndex] = value
+                }
+                Operation.BAStore -> {
+                    val value = stack.pop()
+                    val arrayIndex = stack.pop() as Int
+                    val array = stack.pop()
+                    when (value) {
+                        is Byte -> (array as ByteArray)[arrayIndex] = value
+                        is Boolean -> (array as BooleanArray)[arrayIndex] = value
+                        else -> error("expected value $value to be byte or boolean")
+                    }
+                }
+                Operation.CAStore -> {
                     val value = stack.pop() as Char
-                    val index = stack.pop() as Int
-                    @Suppress("UNCHECKED_CAST") val array = stack.pop() as Array<Char>
-                    array[index] = value
+                    val arrayIndex = stack.pop() as Int
+                    val array = stack.pop() as CharArray
+                    array[arrayIndex] = value
                 }
-                Opcode.SASTORE -> {
+                Operation.SAStore -> {
                     val value = stack.pop() as Short
-                    val index = stack.pop() as Int
-                    @Suppress("UNCHECKED_CAST") val array = stack.pop() as Array<Short>
-                    array[index] = value
+                    val arrayIndex = stack.pop() as Int
+                    val array = stack.pop() as ShortArray
+                    array[arrayIndex] = value
                 }
-                Opcode.POP -> stack.pop()
-                Opcode.POP2 -> {
+                Operation.Pop -> stack.pop()
+                Operation.Pop2 -> {
                     val value = stack.pop()
                     if (value !is Long && value !is Double)
                         stack.pop()
                 }
-                Opcode.DUP -> stack.push(stack.peek())
-                Opcode.DUP_X1 -> {
+                Operation.Dup -> stack.push(stack.peek())
+                Operation.DupX1 -> {
                     val val1 = stack.pop()
                     val val2 = stack.pop()
                     val val1Category = val1.getComputationalTypeCategory()
@@ -244,7 +188,7 @@ class RuntimeVirtualObject(
                     stack.push(val2)
                     stack.push(val1)
                 }
-                Opcode.DUP_X2 -> {
+                Operation.DupX2 -> {
                     val val1 = stack.pop()
                     val val2 = stack.pop()
                     val val1Category = val1.getComputationalTypeCategory()
@@ -266,7 +210,7 @@ class RuntimeVirtualObject(
                         }
                     }
                 }
-                Opcode.DUP2 -> {
+                Operation.Dup2 -> {
                     val val1 = stack.pop()
                     val val1Category = val1.getComputationalTypeCategory()
                     if (val1Category == 2) {
@@ -285,7 +229,7 @@ class RuntimeVirtualObject(
                         }
                     }
                 }
-                Opcode.DUP2_X1 -> {
+                Operation.Dup2X1 -> {
                     val val1 = stack.pop()
                     val val2 = stack.pop()
                     val val1Category = val1.getComputationalTypeCategory()
@@ -308,7 +252,7 @@ class RuntimeVirtualObject(
                         }
                     }
                 }
-                Opcode.DUP2_X2 -> {
+                Operation.Dup2X2 -> {
                     val val1 = stack.pop()
                     val val2 = stack.pop()
                     val val1Category = val1.getComputationalTypeCategory()
@@ -347,7 +291,7 @@ class RuntimeVirtualObject(
                         }
                     }
                 }
-                Opcode.SWAP -> {
+                Operation.Swap -> {
                     val val1 = stack.pop()
                     val val2 = stack.pop()
                     val val1Category = val1.getComputationalTypeCategory()
@@ -359,203 +303,202 @@ class RuntimeVirtualObject(
                         error("$val1, $val2 must be of computational type category 1")
                     }
                 }
-                Opcode.IADD -> {
+                Operation.IAdd -> {
                     val value2 = stack.pop() as Int
                     val value1 = stack.pop() as Int
                     stack.push(value1 + value2)
                 }
-                Opcode.LADD -> {
+                Operation.LAdd -> {
                     val value2 = stack.pop() as Long
                     val value1 = stack.pop() as Long
                     stack.push(value1 + value2)
                 }
-                Opcode.FADD -> {
+                Operation.FAdd -> {
                     val value2 = stack.pop() as Float
                     val value1 = stack.pop() as Float
                     stack.push(value1 + value2)
                 }
-                Opcode.DADD -> {
+                Operation.DAdd -> {
                     val value2 = stack.pop() as Double
                     val value1 = stack.pop() as Double
                     stack.push(value1 + value2)
                 }
-                Opcode.ISUB -> {
+                Operation.ISub -> {
                     val value2 = stack.pop() as Int
                     val value1 = stack.pop() as Int
                     stack.push(value1 - value2)
                 }
-                Opcode.LSUB -> {
+                Operation.LSub -> {
                     val value2 = stack.pop() as Long
                     val value1 = stack.pop() as Long
                     stack.push(value1 - value2)
                 }
-                Opcode.FSUB -> {
+                Operation.FSub -> {
                     val value2 = stack.pop() as Float
                     val value1 = stack.pop() as Float
                     stack.push(value1 - value2)
                 }
-                Opcode.DSUB -> {
+                Operation.DSub -> {
                     val value2 = stack.pop() as Double
                     val value1 = stack.pop() as Double
                     stack.push(value1 - value2)
                 }
-                Opcode.IMUL -> {
+                Operation.IMul -> {
                     val value2 = stack.pop() as Int
                     val value1 = stack.pop() as Int
                     stack.push(value1 * value2)
                 }
-                Opcode.LMUL -> {
+                Operation.LMul -> {
                     val value2 = stack.pop() as Long
                     val value1 = stack.pop() as Long
                     stack.push(value1 * value2)
                 }
-                Opcode.FMUL -> {
+                Operation.FMul -> {
                     val value2 = stack.pop() as Float
                     val value1 = stack.pop() as Float
                     stack.push(value1 * value2)
                 }
-                Opcode.DMUL -> {
+                Operation.DMul -> {
                     val value2 = stack.pop() as Double
                     val value1 = stack.pop() as Double
                     stack.push(value1 * value2)
                 }
-                Opcode.IDIV -> {
+                Operation.IDiv -> {
                     val value2 = stack.pop() as Int
                     val value1 = stack.pop() as Int
                     stack.push(value1 / value2)
                 }
-                Opcode.LDIV -> {
+                Operation.LDiv -> {
                     val value2 = stack.pop() as Long
                     val value1 = stack.pop() as Long
                     stack.push(value1 / value2)
                 }
-                Opcode.FDIV -> {
+                Operation.FDiv -> {
                     val value2 = stack.pop() as Float
                     val value1 = stack.pop() as Float
                     stack.push(value1 / value2)
                 }
-                Opcode.DDIV -> {
+                Operation.DDiv -> {
                     val value2 = stack.pop() as Double
                     val value1 = stack.pop() as Double
                     stack.push(value1 / value2)
                 }
-                Opcode.IREM -> {
+                Operation.IRem -> {
                     val value2 = stack.pop() as Int
                     val value1 = stack.pop() as Int
                     stack.push(value1 % value2)
                 }
-                Opcode.LREM -> {
+                Operation.LRem -> {
                     val value2 = stack.pop() as Long
                     val value1 = stack.pop() as Long
                     stack.push(value1 % value2)
                 }
-                Opcode.FREM -> {
+                Operation.FRem -> {
                     val value2 = stack.pop() as Float
                     val value1 = stack.pop() as Float
                     stack.push(value1 % value2)
                 }
-                Opcode.DREM -> {
+                Operation.DRem -> {
                     val value2 = stack.pop() as Double
                     val value1 = stack.pop() as Double
                     stack.push(value1 % value2)
                 }
-                Opcode.INEG -> {
+                Operation.INeg -> {
                     val value = stack.pop() as Int
                     stack.push(-value)
                 }
-                Opcode.LNEG -> {
+                Operation.LNeg -> {
                     val value = stack.pop() as Long
                     stack.push(-value)
                 }
-                Opcode.FNEG -> {
+                Operation.FNeg -> {
                     val value = stack.pop() as Float
                     stack.push(-value)
                 }
-                Opcode.DNEG -> {
+                Operation.DNeg -> {
                     val value = stack.pop() as Double
                     stack.push(-value)
                 }
-                Opcode.ISHL -> {
+                Operation.IShl -> {
                     val value2 = stack.pop() as Int
                     val value1 = stack.pop() as Int
                     stack.push(value1 shl value2)
                 }
-                Opcode.LSHL -> {
+                Operation.IShr -> {
+                    val value2 = stack.pop() as Int
+                    val value1 = stack.pop() as Int
+                    stack.push(value1 shr value2)
+                }
+                Operation.LShl -> {
                     val value2 = stack.pop() as Int
                     val value1 = stack.pop() as Long
                     stack.push(value1 shl value2)
                 }
-                Opcode.ISHR -> {
-                    val value2 = stack.pop() as Int
-                    val value1 = stack.pop() as Int
-                    stack.push(value1 shr value2)
-                }
-                Opcode.LSHR -> {
+                Operation.LShr -> {
                     val value2 = stack.pop() as Int
                     val value1 = stack.pop() as Long
                     stack.push(value1 shr value2)
                 }
-                Opcode.IUSHR -> {
+                Operation.IUshr -> {
                     val value2 = stack.pop() as Int
                     val value1 = stack.pop() as Int
                     stack.push(value1 ushr value2)
                 }
-                Opcode.LUSHR -> {
+                Operation.LUshr -> {
                     val value2 = stack.pop() as Int
                     val value1 = stack.pop() as Long
                     stack.push(value1 ushr value2)
                 }
-                Opcode.IAND -> {
+                Operation.IAnd -> {
                     val value2 = stack.pop() as Int
                     val value1 = stack.pop() as Int
                     stack.push(value1 and value2)
                 }
-                Opcode.LAND -> {
+                Operation.LAnd -> {
                     val value2 = stack.pop() as Long
                     val value1 = stack.pop() as Long
                     stack.push(value1 and value2)
                 }
-                Opcode.IOR -> {
+                Operation.IOr -> {
                     val value2 = stack.pop() as Int
                     val value1 = stack.pop() as Int
                     stack.push(value1 or value2)
                 }
-                Opcode.LOR -> {
+                Operation.LOr -> {
                     val value2 = stack.pop() as Long
                     val value1 = stack.pop() as Long
                     stack.push(value1 or value2)
                 }
-                Opcode.IXOR -> {
+                Operation.IXor -> {
                     val value2 = stack.pop() as Int
                     val value1 = stack.pop() as Int
                     stack.push(value1 xor value2)
                 }
-                Opcode.LXOR -> {
+                Operation.LXor -> {
                     val value2 = stack.pop() as Long
                     val value1 = stack.pop() as Long
                     stack.push(value1 xor value2)
                 }
-                Opcode.IINC -> {
-                    val index = reader.readUnsignedByte()
-                    val const = reader.readUnsignedByte()
-                    localVariables[index] = (localVariables[index] as Int) + const
+                is Operation.IInc -> {
+                    val current = localVariables[operation.index] as Int
+                    localVariables[operation.index] = current + operation.const
                 }
-                Opcode.I2L -> stack.push((stack.pop() as Int).toLong())
-                Opcode.I2F -> stack.push((stack.pop() as Int).toFloat())
-                Opcode.I2D -> stack.push((stack.pop() as Int).toDouble())
-                Opcode.I2B -> stack.push((stack.pop() as Int).toByte())
-                Opcode.I2C -> stack.push((stack.pop() as Int).toChar())
-                Opcode.I2S -> stack.push((stack.pop() as Int).toShort())
-                Opcode.L2I -> stack.push((stack.pop() as Long).toInt())
-                Opcode.L2F -> stack.push((stack.pop() as Long).toFloat())
-                Opcode.L2D -> stack.push((stack.pop() as Long).toDouble())
-                Opcode.F2I -> stack.push((stack.pop() as Float).toInt())
-                Opcode.F2L -> stack.push((stack.pop() as Float).toLong())
-                Opcode.F2D -> stack.push((stack.pop() as Float).toDouble())
-                Opcode.D2I -> stack.push((stack.pop() as Double).toInt())
-                Opcode.D2L -> stack.push((stack.pop() as Double).toLong())
-                Opcode.D2F -> stack.push((stack.pop() as Double).toFloat())
-                Opcode.LCMP -> {
+                Operation.IntToLong -> stack.push((stack.pop() as Int).toLong())
+                Operation.IntToFloat -> stack.push((stack.pop() as Int).toFloat())
+                Operation.IntToDouble -> stack.push((stack.pop() as Int).toDouble())
+                Operation.IntToByte -> stack.push((stack.pop() as Int).toByte())
+                Operation.IntToChar -> stack.push((stack.pop() as Int).toChar())
+                Operation.IntToShort -> stack.push((stack.pop() as Int).toShort())
+                Operation.LongToInt -> stack.push((stack.pop() as Long).toInt())
+                Operation.LongToFloat -> stack.push((stack.pop() as Long).toFloat())
+                Operation.LongToDouble -> stack.push((stack.pop() as Long).toDouble())
+                Operation.FloatToInt -> stack.push((stack.pop() as Float).toInt())
+                Operation.FloatToLong -> stack.push((stack.pop() as Long).toInt())
+                Operation.FloatToDouble -> stack.push((stack.pop() as Double).toInt())
+                Operation.DoubleToInt -> stack.push((stack.pop() as Double).toInt())
+                Operation.DoubleToLong -> stack.push((stack.pop() as Double).toLong())
+                Operation.DoubleToFloat -> stack.push((stack.pop() as Double).toFloat())
+                Operation.LCmp -> {
                     val value2 = stack.pop() as Long
                     val value1 = stack.pop() as Long
                     stack.push(when {
@@ -564,127 +507,170 @@ class RuntimeVirtualObject(
                         else -> -1
                     })
                 }
-                Opcode.FCMPL,
-                Opcode.FCMPG -> {
+                Operation.FCmpL,
+                Operation.FCmpG -> {
                     val value2 = stack.pop() as Float
                     val value1 = stack.pop() as Float
                     stack.push(when {
-                        value1.isNaN() || value2.isNaN() -> if (opcode == Opcode.FCMPG) 1 else -1
+                        value1.isNaN() || value2.isNaN() -> if (operation == Operation.FCmpG) 1 else -1
                         value1 == value2 -> 0
                         value1 > value2 -> 1
                         value1 < value2 -> -1
-                        else -> if (opcode == Opcode.FCMPG) 1 else -1
+                        else -> if (operation == Operation.FCmpG) 1 else -1
                     })
                 }
-                Opcode.DCMPL,
-                Opcode.DCMPG -> {
+                Operation.DCmpL,
+                Operation.DCmpG -> {
                     val value2 = stack.pop() as Double
                     val value1 = stack.pop() as Double
                     stack.push(when {
-                        value1.isNaN() || value2.isNaN() -> if (opcode == Opcode.DCMPG) 1 else -1
+                        value1.isNaN() || value2.isNaN() -> if (operation == Operation.DCmpG) 1 else -1
                         value1 == value2 -> 0
                         value1 > value2 -> 1
                         value1 < value2 -> -1
-                        else -> if (opcode == Opcode.DCMPG) 1 else -1
+                        else -> if (operation == Operation.DCmpG) 1 else -1
                     })
                 }
-                Opcode.IFEQ,
-                Opcode.IFNE,
-                Opcode.IFLT,
-                Opcode.IFGE,
-                Opcode.IFGT,
-                Opcode.IFLE -> {
-                    val offset = reader.readUnsignedShort()
+                is Operation.IIfEqual -> {
                     val value = stack.pop() as Int
-                    if (opcode == Opcode.IFEQ && value == 0 ||
-                            opcode == Opcode.IFNE && value != 0 ||
-                            opcode == Opcode.IFLT && value < 0 ||
-                            opcode == Opcode.IFLE && value <= 0 ||
-                            opcode == Opcode.IFGT && value > 0 ||
-                            opcode == Opcode.IFGE && value >= 0) {
-                        reader.jumpTo(byteCodeIndex + offset)
+                    if(value == 0) {
+                        index = getJumpPosition(byteCodeTable, operation)
                     }
                 }
-                Opcode.IF_ICMPEQ,
-                Opcode.IF_ICMPNE,
-                Opcode.IF_ICMPLT,
-                Opcode.IF_ICMPGE,
-                Opcode.IF_ICMPGT,
-                Opcode.IF_ICMPLE -> {
-                    val offset = reader.readUnsignedShort()
+                is Operation.IIfNotEqual -> {
+                    val value = stack.pop() as Int
+                    if(value != 0) {
+                        index = getJumpPosition(byteCodeTable, operation)
+                    }
+                }
+                is Operation.IIfLessThan -> {
+                    val value = stack.pop() as Int
+                    if (value < 0) {
+                        index = getJumpPosition(byteCodeTable, operation)
+                    }
+                }
+                is Operation.IIfGreaterThan -> {
+                    val value = stack.pop() as Int
+                    if (value > 0) {
+                        index = getJumpPosition(byteCodeTable, operation)
+                    }
+                }
+                is Operation.IIfLessThanOrEqual -> {
+                    val value = stack.pop() as Int
+                    if (value <= 0) {
+                        index = getJumpPosition(byteCodeTable, operation)
+                    }
+                }
+                is Operation.IIfGreaterThanOrEqual -> {
+                    val value = stack.pop() as Int
+                    if (value >= 0) {
+                        index = getJumpPosition(byteCodeTable, operation)
+                    }
+                }
+                is Operation.IfCompareIntEqual -> {
                     val value2 = stack.pop() as Int
                     val value1 = stack.pop() as Int
-                    if (opcode == Opcode.IF_ICMPEQ && value1 == value2 ||
-                            opcode == Opcode.IF_ICMPNE && value1 != value2 ||
-                            opcode == Opcode.IF_ICMPLT && value1 < value2 ||
-                            opcode == Opcode.IF_ICMPLE && value1 <= value2 ||
-                            opcode == Opcode.IF_ICMPGT && value1 > value2 ||
-                            opcode == Opcode.IF_ICMPGE && value1 >= value2) {
-                        reader.jumpTo(byteCodeIndex + offset)
+                    if (value1 == value2) {
+                        index = getJumpPosition(byteCodeTable, operation)
                     }
                 }
-                Opcode.IF_ACMPEQ,
-                Opcode.IF_ACMPNE -> {
-                    val offset = reader.readUnsignedShort()
+                is Operation.IfCompareIntNotEqual -> {
+                    val value2 = stack.pop() as Int
+                    val value1 = stack.pop() as Int
+                    if (value1 != value2) {
+                        index = getJumpPosition(byteCodeTable, operation)
+                    }
+                }
+                is Operation.IfCompareIntLessThan -> {
+                    val value2 = stack.pop() as Int
+                    val value1 = stack.pop() as Int
+                    if (value1 < value2) {
+                        index = getJumpPosition(byteCodeTable, operation)
+                    }
+                }
+                is Operation.IfCompareIntGreaterThanOrEqual -> {
+                    val value2 = stack.pop() as Int
+                    val value1 = stack.pop() as Int
+                    if (value1 >= value2) {
+                        index = getJumpPosition(byteCodeTable, operation)
+                    }
+                }
+                is Operation.IfCompareIntLessThanOrEqual -> {
+                    val value2 = stack.pop() as Int
+                    val value1 = stack.pop() as Int
+                    if (value1 <= value2) {
+                        index = getJumpPosition(byteCodeTable, operation)
+                    }
+                }
+                is Operation.IfCompareReferenceEqual -> {
                     val value2 = stack.pop()
                     val value1 = stack.pop()
-                    if (opcode == Opcode.IF_ACMPEQ && value1 === value2 ||
-                            opcode == Opcode.IF_ACMPNE && value1 !== value2) {
-                        reader.jumpTo(byteCodeIndex + offset)
+                    if (value1 === value2) {
+                        index = getJumpPosition(byteCodeTable, operation)
                     }
                 }
-                Opcode.GOTO -> {
-                    val gotoOffset = reader.readUnsignedShort()
-                    reader.jumpTo(byteCodeIndex + gotoOffset)
+                is Operation.IfCompareReferenceNotEqual -> {
+                    val value2 = stack.pop()
+                    val value1 = stack.pop()
+                    if (value1 !== value2) {
+                        index = getJumpPosition(byteCodeTable, operation)
+                    }
                 }
-                Opcode.JSR, Opcode.JSR_W -> {
-                    val offset = if (opcode == Opcode.JSR_W) reader.readInt() else reader.readUnsignedShort()
-                    stack.push(byteCodeIndex)
-                    reader.jumpTo(byteCodeIndex + offset)
+                is Operation.Goto -> {
+                    index = getJumpPosition(byteCodeTable, operation)
                 }
-                Opcode.RET -> {
-                    val index = reader.readUnsignedByte()
-                    val address = localVariables[index] as Int
-                    reader.jumpTo(address)
+                is Operation.JumpToSubroutine -> {
+                    stack.push(operation.byteCodeIndex)
+                    index = getJumpPosition(byteCodeTable, operation)
                 }
-                Opcode.TABLESWITCH -> tableSwitch(reader, byteCodeIndex, stack)
-                Opcode.LOOKUPSWITCH -> lookupSwitch(reader, byteCodeIndex, stack)
-                Opcode.GETSTATIC -> {
-                    val index = reader.readUnsignedShort()
-                    val fieldReference = classInfo.constantPool[index] as FieldReference
+                is Operation.Ret -> {
+                    val address = localVariables[operation.index] as Int
+                    index = byteCodeTable[address] ?: error("cannot find index to jump to")
+                }
+                is Operation.TableSwitch -> {
+                    val tableIndex = stack.pop() as Int
+                    val targetAddress = if (tableIndex < operation.low || tableIndex > operation.high) {
+                        operation.byteCodeIndex + operation.defaultValue
+                    } else {
+                        operation.byteCodeIndex + operation.table[tableIndex - operation.low]
+                    }
+                    index = byteCodeTable[targetAddress] ?: error("cannot find index to jump to")
+                }
+                is Operation.LookupSwitch -> {
+                    val key = stack.pop() as Int
+                    val targetAddress = operation.byteCodeIndex + (operation.pairs[key] ?: operation.defaultValue)
+                    index = byteCodeTable[targetAddress] ?: error("cannot find index to jump to")
+                }
+                is Operation.GetStatic -> {
+                    val fieldReference = classInfo.constantPool[operation.field] as FieldReference
                     val staticClass = getStaticClassByClassIndex(fieldReference.classIndex)
 
                     val value = getInstanceFieldValue(staticClass, fieldReference)
                     stack.push(value)
                 }
-                Opcode.PUTSTATIC -> {
-                    val index = reader.readUnsignedShort()
+                is Operation.PutStatic -> {
                     val value = stack.pop()
-
-                    val fieldReference = classInfo.constantPool[index] as FieldReference
+                    val fieldReference = classInfo.constantPool[operation.field] as FieldReference
                     val staticClass = getStaticClassByClassIndex(fieldReference.classIndex)
 
                     setInstanceFieldValue(staticClass, fieldReference, value)
                 }
-                Opcode.GETFIELD -> {
-                    val index = reader.readUnsignedShort()
+                is Operation.GetField -> {
                     val instance = stack.pop() as VirtualObject
+                    val fieldReference = classInfo.constantPool[operation.field] as FieldReference
 
-                    val fieldReference = classInfo.constantPool[index] as FieldReference
                     val value = getInstanceFieldValue(instance, fieldReference)
                     stack.push(value)
                 }
-                Opcode.PUTFIELD -> {
-                    val index = reader.readUnsignedShort()
+                is Operation.PutField -> {
                     val value = stack.pop()
                     val instance = stack.pop() as VirtualObject
 
-                    val fieldReference = classInfo.constantPool[index] as FieldReference
+                    val fieldReference = classInfo.constantPool[operation.field] as FieldReference
                     setInstanceFieldValue(instance, fieldReference, value)
                 }
-                Opcode.INVOKEVIRTUAL -> {
-                    val methodReferenceIndex = reader.readUnsignedShort()
-                    val otherMethod = getMethod(classInfo.constantPool, methodReferenceIndex)
+                is Operation.InvokeVirtual -> {
+                    val otherMethod = getMethod(classInfo.constantPool, operation.methodReferenceIndex)
                     val methodArgs = stack.popMultiple(otherMethod.descriptor.parameters.size)
                     val instance = stack.pop()
                     val returnValue = invokeMethodOnInstance(instance, otherMethod, methodArgs)
@@ -692,11 +678,10 @@ class RuntimeVirtualObject(
                         stack.push(returnValue.value)
                     }
                 }
-                Opcode.INVOKESPECIAL -> {
+                is Operation.InvokeSpecial -> {
                     //TODO: create another method here that calls invokeMethod and does additional checks as described in...
                     //http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.invokespecial
-                    val methodReferenceIndex = reader.readUnsignedShort()
-                    val otherMethod = getMethod(classInfo.constantPool, methodReferenceIndex)
+                    val otherMethod = getMethod(classInfo.constantPool, operation.methodReferenceIndex)
                     val methodArgs = stack.popMultiple(otherMethod.descriptor.parameters.size)
                     val instance = stack.pop()
                     val returnValue = invokeMethodOnInstance(instance, otherMethod, methodArgs)
@@ -704,9 +689,8 @@ class RuntimeVirtualObject(
                         stack.push(returnValue.value)
                     }
                 }
-                Opcode.INVOKESTATIC -> {
-                    val methodReferenceIndex = reader.readUnsignedShort()
-                    val otherMethod = getMethod(classInfo.constantPool, methodReferenceIndex)
+                is Operation.InvokeStatic -> {
+                    val otherMethod = getMethod(classInfo.constantPool, operation.methodReferenceIndex)
                     val methodArgs = stack.popMultiple(otherMethod.descriptor.parameters.size)
                     val staticClass = loadStaticObject(otherMethod.className)
                     val returnValue = invokeMethodOnInstance(staticClass, otherMethod, methodArgs)
@@ -714,39 +698,45 @@ class RuntimeVirtualObject(
                         stack.push(returnValue.value)
                     }
                 }
-                Opcode.INVOKEINTERFACE -> TODO()
-                Opcode.INVOKEDYNAMIC -> TODO()
-                Opcode.NEW -> {
-                    val newObjectIndex = reader.readUnsignedShort()
-                    stack.push(new(newObjectIndex))
+                is Operation.InvokeInterface -> TODO()
+                is Operation.InvokeDynamic -> TODO()
+                is Operation.New -> {
+                    val classRef = classInfo.constantPool[operation.classReferenceIndex] as ClassReference
+                    val className = classInfo.constantPool[classRef.nameIndex] as String
+
+                    stack.push(loadObject(className))
                 }
-                Opcode.NEWARRAY -> TODO()
-                Opcode.ANEWARRAY -> TODO()
-                Opcode.ARRAYLENGTH -> TODO()
-                Opcode.ATHROW -> TODO()
-                Opcode.CHECKCAST -> TODO()
-                Opcode.INSTANCEOF -> TODO()
-                Opcode.MONITORENTER -> TODO()
-                Opcode.MONITOREXIT -> TODO()
-                Opcode.WIDE -> TODO()
-                Opcode.MULTIANEWARRAY -> TODO()
-                Opcode.IFNULL -> TODO()
-                Opcode.IFNONNULL -> TODO()
-                Opcode.GOTO_W -> TODO()
-                Opcode.BREAKPOINT -> TODO()
-                Opcode.IMPDEP1 -> TODO()
-                Opcode.IMPDEP2 -> TODO()
-                else -> {
-                    val byteCodeName = opcode?.name
-                    val hexCode = byteCode.toString(16)
-                    error("Unknown bytecode: $byteCodeName ($hexCode) at position $byteCodeIndex")
+                is Operation.NewArray -> TODO()
+                is Operation.ANewArray -> TODO()
+                Operation.ArrayLength -> TODO()
+                Operation.AThrow -> TODO()
+                is Operation.CheckCast -> TODO()
+                is Operation.InstanceOf -> TODO()
+                Operation.MonitorEnter -> TODO()
+                Operation.MonitorExit -> TODO()
+                is Operation.MultiANewArray -> TODO()
+                is Operation.IfNull -> {
+                    val value = stack.pop()
+                    if (value == null) {
+                        index = getJumpPosition(byteCodeTable, operation)
+                    }
+                }
+                is Operation.IfNonNull -> {
+                    val value = stack.pop()
+                    if(value != null) {
+                        index = getJumpPosition(byteCodeTable, operation)
+                    }
                 }
             }
-
+            index++
         }
 
         return null
     }
+
+    private fun getJumpPosition(byteCodeTable: Map<Int, Int>, operation: OffsetOperation) =
+            byteCodeTable[operation.byteCodeIndex + operation.offset]
+                    ?: error("cannot find index to jump to")
 
     private fun getInstanceFieldValue(instance: VirtualObject, fieldReference: FieldReference): Any? {
         val fieldNameAndType = classInfo.constantPool[fieldReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
@@ -775,42 +765,7 @@ class RuntimeVirtualObject(
         else -> 1
     }
 
-    private fun tableSwitch(reader: ByteCodeReader, byteCodeIndex: Int, stack: OperandStack) {
-        reader.skip((byteCodeIndex + 1) % 4)
-        val defaultValue = reader.readInt()
-        val low = reader.readInt()
-        val high = reader.readInt()
-        if (low > high) {
-            error("low is higher than high: $low > $high")
-        }
-
-        val offsetWidth = high - low + 1
-        val table = IntArray(offsetWidth) { reader.readInt() }
-        val index = stack.pop() as Int
-        val targetAddress = if (index < low || index > high) {
-            byteCodeIndex + defaultValue
-        } else {
-            byteCodeIndex + table[index - low]
-        }
-        reader.jumpTo(targetAddress)
-    }
-
-    private fun lookupSwitch(reader: ByteCodeReader, byteCodeIndex: Int, stack: OperandStack) {
-        reader.skip((byteCodeIndex + 1) % 4)
-        val defaultValue = reader.readInt()
-        val npairs = reader.readInt()
-        if(npairs < 0) error("npairs be >= 0")
-        val pairs = mutableMapOf<Int,Int>()
-        repeat(npairs) {
-            val key = reader.readInt()
-            val value = reader.readInt()
-            pairs += key to value
-        }
-        val key = stack.pop() as Int
-        reader.jumpTo(byteCodeIndex + (pairs[key] ?: defaultValue))
-    }
-
-    private fun invokeMethodOnInstance(instance: Any?, method: Method, methodArgs: Array<Any?>): ReturnValue {
+    private suspend fun invokeMethodOnInstance(instance: Any?, method: Method, methodArgs: Array<Any?>): ReturnValue {
         return when {
             instance is VirtualObject -> {
                 val value = instance.invokeMethod(method.name, method.rawDescriptor, methodArgs)
@@ -829,7 +784,7 @@ class RuntimeVirtualObject(
         class Value(val value: Any?) : ReturnValue()
     }
 
-    private fun ldc(ldcIndex: Int): Any? =
+    private fun ldc(ldcIndex: Int): Any =
             when (val constant = classInfo.constantPool[ldcIndex]) {
                 is Int, is Float, is String, is MethodHandleReference -> constant
                 is StringReference -> classInfo.constantPool[constant.index]!!
@@ -837,14 +792,7 @@ class RuntimeVirtualObject(
                 else -> error("Fix returning value for $constant")
             }
 
-    private fun new(newObjectIndex: Int): VirtualObject {
-        val classRef = classInfo.constantPool[newObjectIndex] as ClassReference
-        val className = classInfo.constantPool[classRef.nameIndex] as String
-
-        return loadObject(className)
-    }
-
-    private fun getStaticClassByClassIndex(classIndex: Int): VirtualObject {
+    private suspend fun getStaticClassByClassIndex(classIndex: Int): VirtualObject {
         val classReference = classInfo.constantPool[classIndex] as ClassReference
         val className = classInfo.constantPool[classReference.nameIndex] as String
 

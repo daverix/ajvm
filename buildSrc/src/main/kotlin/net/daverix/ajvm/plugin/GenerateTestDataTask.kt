@@ -1,40 +1,41 @@
 package net.daverix.ajvm.plugin
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
 import javax.inject.Inject
 
-open class GenerateTestDataTask @Inject constructor(
-        @InputDirectory val classesDir: File,
-        @OutputDirectory val outputDir: File
-) : DefaultTask() {
+abstract class GenerateTestDataTask : DefaultTask() {
+    @get:InputFiles
+    abstract val config: Property<Configuration>
+
+    @get:OutputDirectory
+    abstract val outputDir: Property<File>
 
     @TaskAction
     fun generateTestData() {
         val packageName = "net.daverix.ajvm.testdata"
         val relativePath = packageName.replace('.', '/')
-        val generatedFile = File(outputDir, "$relativePath/TestData.kt")
+        val generatedFile = File(outputDir.get(), "$relativePath/TestData.kt")
         generatedFile.parentFile.mkdirs()
 
-        val lines = mutableListOf<String>()
-        project.fileTree(classesDir).filter { !it.isDirectory && it.extension == "class" }.forEach { file ->
-            val className = file.nameWithoutExtension.replace("$","\\$")
-            println("parsing $className")
+        val rtPath = "${System.getProperty("java.home")}/lib/rt.jar"
+        val paths = config.get().resolve().map { it.absolutePath } + rtPath
 
-            val bytes = file.readBytes().joinToString(", ") {
-                String.format("0x%02X", it)
-            }
-            lines += "    \"net/daverix/ajvm/test/$className\" to intArrayOf($bytes).map { it.toByte() }.toByteArray()"
-        }
         generatedFile.writeText("""
 package $packageName
 
-val testData = mapOf(
-${lines.joinToString(",\n")}
+val testClassPath = listOf(
+${paths.joinToString(",\n") { "    \"$it\"" }}
 )
-                """.trimIndent())
+        """.trimIndent())
     }
 }

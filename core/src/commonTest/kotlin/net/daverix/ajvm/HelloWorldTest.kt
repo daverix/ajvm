@@ -23,23 +23,18 @@ import kotlin.test.assertEquals
 class HelloWorldTest {
     private lateinit var stdOut: FakePrinter
     private lateinit var stdErr: FakePrinter
-    private lateinit var sut: VirtualObject
+    private lateinit var sut: VirtualMachine
 
     @BeforeTest
     fun setUp() {
         stdOut = FakePrinter()
         stdErr = FakePrinter()
-        val testClassLoader = ApplicationObjectLoader(
-                TestDataFileOpener,
-                PrintStreamObject(stdOut),
-                PrintStreamObject(stdErr)
-        )
-        sut = testClassLoader.load("net/daverix/ajvm/test/HelloWorld")
+        sut = VirtualMachine(testClassInfoProvider)
     }
 
     @Test
-    fun run() {
-        sut.invokeMain(arrayOf("World"))
+    fun run() = runBlockingTest {
+        sut.run("net/daverix/ajvm/test/HelloWorld", "World")
 
         //Note! We call println so the string ends with \n
         assertEquals("Hello World!\n", stdOut.output)

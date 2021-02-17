@@ -59,6 +59,16 @@ actual open class DataInputStream(private val dataView: DataView) {
             error("end of stream")
         }
     }
+
+    actual fun skipBytes(count: Int): Int {
+        var newIndex = index + count
+        if(newIndex >= dataView.buffer.byteLength)
+            newIndex = dataView.buffer.byteLength-1
+
+        val skipped = newIndex - index
+        index = newIndex
+        return skipped
+    }
 }
 
 actual fun <T> ByteArray.useDataInputStream(func: (DataInputStream) -> T): T {

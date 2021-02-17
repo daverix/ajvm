@@ -19,11 +19,12 @@ package net.daverix.ajvm.io
 
 import net.daverix.ajvm.containsFlag
 
-class MethodInfo(
-        accessFlags: Int,
+data class MethodInfo(
+        val accessFlags: Int,
         val nameIndex: Int,
         val descriptorIndex: Int,
-        val attributes: Array<AttributeInfo>
+        val codeAttribute: CodeAttribute?,
+        val otherAttributes: List<AttributeInfo>
 ) {
     val isPrivate = accessFlags containsFlag ACC_PRIVATE
     val isProtected = accessFlags containsFlag ACC_PROTECTED

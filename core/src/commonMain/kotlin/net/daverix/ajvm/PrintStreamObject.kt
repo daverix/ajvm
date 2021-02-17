@@ -20,7 +20,7 @@ import net.daverix.ajvm.io.Printer
 
 class PrintStreamObject(private val printer: Printer) : VirtualObject {
 
-    override fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
+    override suspend fun invokeMethod(name: String, descriptor: String, args: Array<Any?>): Any? {
         if ("println" == name && "(Ljava/lang/String;)V" == descriptor) {
             printer.println(args[0] as String)
             return null

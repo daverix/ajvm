@@ -23,22 +23,17 @@ import kotlin.test.assertEquals
 class CalculatorTest {
     private lateinit var stdOut: FakePrinter
     private lateinit var stdErr: FakePrinter
-    private lateinit var sut: VirtualObject
+    private lateinit var sut: VirtualMachine
 
     @BeforeTest
     fun setUp() {
         stdOut = FakePrinter()
         stdErr = FakePrinter()
-        val testClassLoader = ApplicationObjectLoader(
-                TestDataFileOpener,
-                PrintStreamObject(stdOut),
-                PrintStreamObject(stdErr)
-        )
-        sut = testClassLoader.load("net/daverix/ajvm/test/Calculator")
+        sut = VirtualMachine(testClassInfoProvider)
     }
 
     @Test
-    fun add() {
+    fun add() = runBlockingTest {
         invokeCalculator("1 + 2")
 
         //Note! We call println so the string ends with \n
@@ -46,7 +41,7 @@ class CalculatorTest {
     }
 
     @Test
-    fun subtract() {
+    fun subtract() = runBlockingTest {
         invokeCalculator("3 - 2")
 
         //Note! We call println so the string ends with \n
@@ -54,7 +49,7 @@ class CalculatorTest {
     }
 
     @Test
-    fun divide() {
+    fun divide() = runBlockingTest {
         invokeCalculator("6 / 2")
 
         //Note! We call println so the string ends with \n
@@ -62,7 +57,7 @@ class CalculatorTest {
     }
 
     @Test
-    fun multiply() {
+    fun multiply() = runBlockingTest {
         invokeCalculator("2 * 3")
 
         //Note! We call println so the string ends with \n
@@ -70,7 +65,7 @@ class CalculatorTest {
     }
 
     @Test
-    fun modulus() {
+    fun modulus() = runBlockingTest {
         invokeCalculator("5 % 2")
 
         //Note! We call println so the string ends with \n
@@ -78,14 +73,17 @@ class CalculatorTest {
     }
 
     @Test
-    fun testError() {
+    fun testError() = runBlockingTest {
         invokeCalculator("5 ? 2")
 
         //Note! We call println so the string ends with \n
         assertEquals("Unknown operator ?\n", stdErr.output)
     }
 
-    private fun invokeCalculator(args: String) {
-        sut.invokeMain(args.split(" ").toTypedArray())
+    private suspend fun invokeCalculator(args: String) {
+        sut.run(
+                className = "net/daverix/ajvm/test/Calculator",
+                args = args.split(" ").toTypedArray()
+        )
     }
 }

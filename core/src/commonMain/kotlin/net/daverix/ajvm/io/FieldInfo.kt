@@ -20,30 +20,8 @@ data class FieldInfo(
         val accessFlags: Int,
         val nameIndex: Int,
         val descriptorIndex: Int,
-        val attributes: Array<AttributeInfo>
+        val attributes: List<AttributeInfo>
 ) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as FieldInfo
-
-        if (accessFlags != other.accessFlags) return false
-        if (nameIndex != other.nameIndex) return false
-        if (descriptorIndex != other.descriptorIndex) return false
-        if (!attributes.contentEquals(other.attributes)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = accessFlags
-        result = 31 * result + nameIndex
-        result = 31 * result + descriptorIndex
-        result = 31 * result + attributes.contentHashCode()
-        return result
-    }
-
     companion object {
         val ACC_PUBLIC = 0x0001
         val ACC_PRIVATE = 0x0002
