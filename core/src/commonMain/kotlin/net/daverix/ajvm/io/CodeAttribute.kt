@@ -27,7 +27,7 @@ data class CodeAttribute(
         val attributes: List<AttributeInfo>
 )
 
-fun DataInputStream.readCodeAttribute(attributeLength: Int): CodeAttribute {
+fun DataInputStream.readCodeAttribute(constantPool: ConstantPool): CodeAttribute {
     val maxStack = readUnsignedShort()
     val maxLocals = readUnsignedShort()
     val codeLength = readInt()
@@ -84,11 +84,21 @@ fun DataInputStream.readCodeAttribute(attributeLength: Int): CodeAttribute {
             Opcode.LDC_W -> {
                 val value = readUnsignedShort()
                 index += 2
-                Operation.Ldc(value)
+                val constant = when (val constant = constantPool[value]) {
+                    is Int, is Float, is String -> constant
+                    is StringReference -> constantPool[constant.index]
+                    else -> error("Fix returning value for $constant")
+                }
+                Operation.Ldc(constant)
             }
             Opcode.LDC2_W -> {
                 val value = readUnsignedShort()
                 index += 2
+
+                val constant = constantPool[value]
+                if (constant !is Long && constant !is Double)
+                    error("expected $constant to be double or long")
+
                 Operation.Ldc2(value)
             }
             Opcode.ILOAD -> {
@@ -399,9 +409,9 @@ fun DataInputStream.readCodeAttribute(attributeLength: Int): CodeAttribute {
                 val npairs = readInt()
                 index += 4
 
-                if(npairs < 0) error("npairs must be >= 0")
+                if (npairs < 0) error("npairs must be >= 0")
 
-                val pairs = mutableMapOf<Int,Int>()
+                val pairs = mutableMapOf<Int, Int>()
                 repeat(npairs) {
                     val key = readInt()
                     index += 4
@@ -419,52 +429,127 @@ fun DataInputStream.readCodeAttribute(attributeLength: Int): CodeAttribute {
             Opcode.GETSTATIC -> {
                 val field = readUnsignedShort()
                 index += 2
-                Operation.GetStatic(field)
+
+                val fieldReference = constantPool[field] as FieldReference
+
+                val classReference = constantPool[fieldReference.classIndex] as ClassReference
+                val className = constantPool[classReference.nameIndex] as String
+
+                val nameAndTypeReference = constantPool[fieldReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
+                val fieldName = constantPool[nameAndTypeReference.nameIndex] as String
+
+                Operation.GetStatic(className, fieldName)
             }
             Opcode.PUTSTATIC -> {
                 val field = readUnsignedShort()
                 index += 2
-                Operation.PutStatic(field)
+
+                val fieldReference = constantPool[field] as FieldReference
+
+                val classReference = constantPool[fieldReference.classIndex] as ClassReference
+                val className = constantPool[classReference.nameIndex] as String
+
+                val nameAndTypeReference = constantPool[fieldReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
+                val fieldName = constantPool[nameAndTypeReference.nameIndex] as String
+
+                Operation.PutStatic(className, fieldName)
             }
             Opcode.GETFIELD -> {
                 val field = readUnsignedShort()
                 index += 2
-                Operation.GetField(field)
+
+                val fieldReference = constantPool[field] as FieldReference
+                val classReference = constantPool[fieldReference.classIndex] as ClassReference
+                val className = constantPool[classReference.nameIndex] as String
+                val nameAndTypeReference = constantPool[fieldReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
+                val fieldName = constantPool[nameAndTypeReference.nameIndex] as String
+
+                Operation.GetField(className, fieldName)
             }
             Opcode.PUTFIELD -> {
                 val field = readUnsignedShort()
                 index += 2
-                Operation.PutField(field)
+
+                val fieldReference = constantPool[field] as FieldReference
+                val classReference = constantPool[fieldReference.classIndex] as ClassReference
+                val className = constantPool[classReference.nameIndex] as String
+                val nameAndTypeReference = constantPool[fieldReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
+                val fieldName = constantPool[nameAndTypeReference.nameIndex] as String
+
+                Operation.PutField(className, fieldName)
             }
             Opcode.INVOKEVIRTUAL -> {
                 val methodReferenceIndex = readUnsignedShort()
                 index += 2
-                Operation.InvokeVirtual(methodReferenceIndex)
+
+                val methodReference = constantPool[methodReferenceIndex] as MethodReference
+                val nameAndType = constantPool[methodReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
+                val classReference = constantPool[methodReference.classIndex] as ClassReference
+                val className = constantPool[classReference.nameIndex] as String
+                val methodName = constantPool[nameAndType.nameIndex] as String
+                val descriptor = constantPool[nameAndType.descriptorIndex] as String
+
+                Operation.InvokeVirtual(className, methodName, descriptor)
             }
             Opcode.INVOKESPECIAL -> {
                 val methodReferenceIndex = readUnsignedShort()
                 index += 2
-                Operation.InvokeSpecial(methodReferenceIndex)
+
+                val methodReference = constantPool[methodReferenceIndex] as MethodReference
+                val classReference = constantPool[methodReference.classIndex] as ClassReference
+                val className = constantPool[classReference.nameIndex] as String
+                val nameAndType = constantPool[methodReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
+                val methodName = constantPool[nameAndType.nameIndex] as String
+                val descriptor = constantPool[nameAndType.descriptorIndex] as String
+
+                Operation.InvokeSpecial(className, methodName, descriptor)
             }
             Opcode.INVOKESTATIC -> {
                 val methodReferenceIndex = readUnsignedShort()
                 index += 2
-                Operation.InvokeStatic(methodReferenceIndex)
+
+                val methodReference = constantPool[methodReferenceIndex] as MethodReference
+                val classReference = constantPool[methodReference.classIndex] as ClassReference
+                val className = constantPool[classReference.nameIndex] as String
+                val nameAndType = constantPool[methodReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
+                val methodName = constantPool[nameAndType.nameIndex] as String
+                val descriptor = constantPool[nameAndType.descriptorIndex] as String
+
+                Operation.InvokeStatic(className, methodName, descriptor)
             }
             Opcode.INVOKEINTERFACE -> {
                 val methodReferenceIndex = readUnsignedShort()
                 index += 2
-                Operation.InvokeInterface(methodReferenceIndex)
+
+                val methodReference = constantPool[methodReferenceIndex] as InterfaceMethodReference
+                val classReference = constantPool[methodReference.classIndex] as ClassReference
+                val className = constantPool[classReference.nameIndex] as String
+                val nameAndType = constantPool[methodReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
+                val methodName = constantPool[nameAndType.nameIndex] as String
+                val descriptor = constantPool[nameAndType.descriptorIndex] as String
+
+                Operation.InvokeInterface(className, methodName, descriptor)
             }
             Opcode.INVOKEDYNAMIC -> {
                 val methodReferenceIndex = readUnsignedShort()
                 index += 2
-                Operation.InvokeDynamic(methodReferenceIndex)
+
+                val methodReference = constantPool[methodReferenceIndex] as MethodReference
+                val classReference = constantPool[methodReference.classIndex] as ClassReference
+                val className = constantPool[classReference.nameIndex] as String
+                val nameAndType = constantPool[methodReference.nameAndTypeIndex] as NameAndTypeDescriptorReference
+                val methodName = constantPool[nameAndType.nameIndex] as String
+                val descriptor = constantPool[nameAndType.descriptorIndex] as String
+
+                Operation.InvokeDynamic(className, methodName, descriptor)
             }
             Opcode.NEW -> {
                 val classReferenceIndex = readUnsignedShort()
                 index += 2
-                Operation.New(classReferenceIndex)
+
+                val classRef = constantPool[classReferenceIndex] as ClassReference
+                val className = constantPool[classRef.nameIndex] as String
+                Operation.New(className)
             }
             Opcode.NEWARRAY -> {
                 val type = readUnsignedByte()
@@ -474,19 +559,31 @@ fun DataInputStream.readCodeAttribute(attributeLength: Int): CodeAttribute {
             Opcode.ANEWARRAY -> {
                 val classReferenceIndex = readUnsignedShort()
                 index += 2
-                Operation.ANewArray(classReferenceIndex)
+
+                val classReference = constantPool[classReferenceIndex] as ClassReference
+                val className = constantPool[classReference.nameIndex] as String
+
+                Operation.ANewArray(className)
             }
             Opcode.ARRAYLENGTH -> Operation.ArrayLength
             Opcode.ATHROW -> Operation.AThrow
             Opcode.CHECKCAST -> {
                 val classReferenceIndex = readUnsignedShort()
                 index += 2
-                Operation.CheckCast(classReferenceIndex)
+
+                val classReference = constantPool[classReferenceIndex] as ClassReference
+                val className = constantPool[classReference.nameIndex] as String
+
+                Operation.CheckCast(className)
             }
             Opcode.INSTANCEOF -> {
                 val classReferenceIndex = readUnsignedShort()
                 index += 2
-                Operation.InstanceOf(classReferenceIndex)
+
+                val classReference = constantPool[classReferenceIndex] as ClassReference
+                val className = constantPool[classReference.nameIndex] as String
+
+                Operation.InstanceOf(className)
             }
             Opcode.MONITORENTER -> Operation.MonitorEnter
             Opcode.MONITOREXIT -> Operation.MonitorExit
@@ -494,7 +591,7 @@ fun DataInputStream.readCodeAttribute(attributeLength: Int): CodeAttribute {
                 val wideCode = readUnsignedByte()
                 index++
 
-                when(fromByteCode(wideCode)) {
+                when (fromByteCode(wideCode)) {
                     Opcode.ILOAD -> {
                         val value = readUnsignedShort()
                         index += 2
@@ -561,16 +658,20 @@ fun DataInputStream.readCodeAttribute(attributeLength: Int): CodeAttribute {
                 index += 2
                 val dimensions = readUnsignedByte()
                 index++
-                Operation.MultiANewArray(classIndex, dimensions)
+
+                val classReference = constantPool[classIndex] as ClassReference
+                val className = constantPool[classReference.nameIndex] as String
+
+                Operation.MultiANewArray(className, dimensions)
             }
             Opcode.IFNULL -> {
                 val offset = readUnsignedShort()
-                index+=2
+                index += 2
                 Operation.IfNull(byteCodeIndex, offset)
             }
             Opcode.IFNONNULL -> {
                 val offset = readUnsignedShort()
-                index+=2
+                index += 2
                 Operation.IfNonNull(byteCodeIndex, offset)
             }
             Opcode.GOTO_W -> {
@@ -584,11 +685,8 @@ fun DataInputStream.readCodeAttribute(attributeLength: Int): CodeAttribute {
         }
     }
 
-    val exceptionCount = readUnsignedShort()
-    val exceptionTable = List(exceptionCount) {
-        Exception()
-    }
-    val attributes = readAttributes()
+    val exceptionTable = readExceptions()
+    val attributes = readAttributes(constantPool)
 
     return CodeAttribute(maxStack, maxLocals, code, bytecodeTable, exceptionTable, attributes)
 }

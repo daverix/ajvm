@@ -16,31 +16,35 @@
  */
 package net.daverix.ajvm.io
 
-data class AttributeInfo(val nameIndex: Int, val info: ByteArray) {
+data class AttributeInfo(
+        val name: String,
+        val info: ByteArray
+) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other == null || this::class != other::class) return false
+        if (other !is AttributeInfo) return false
 
-        other as AttributeInfo
-
-        if (nameIndex != other.nameIndex) return false
+        if (name != other.name) return false
         if (!info.contentEquals(other.info)) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = nameIndex
+        var result = name.hashCode()
         result = 31 * result + info.contentHashCode()
         return result
     }
 }
 
-fun DataInputStream.readAttributes(): List<AttributeInfo> {
+fun DataInputStream.readAttributes(constantPool: ConstantPool): List<AttributeInfo> {
     return List(readUnsignedShort()) {
         val nameIndex = readUnsignedShort()
         val info = ByteArray(readInt())
         readFully(info)
-        AttributeInfo(nameIndex, info)
+
+        val name = constantPool[nameIndex] as String
+
+        AttributeInfo(name, info)
     }
 }

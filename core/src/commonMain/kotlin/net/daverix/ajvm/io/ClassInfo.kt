@@ -21,20 +21,16 @@ import net.daverix.ajvm.io.ConstantPool.Companion.readConstantPool
 data class ClassInfo(
         val majorVersion: Int,
         val minorVersion: Int,
-        val constantPool: ConstantPool,
         val accessFlags: Int,
-        val classIndex: Int,
-        val superClassIndex: Int,
+        val name: String,
+        val superClassName: String?,
         val interfaces: List<Int>,
         val fields: List<FieldInfo>,
         val methods: List<MethodInfo>,
         val attributes: List<AttributeInfo>
 ) {
-    val name: String
-        get() {
-            val classReference = constantPool[classIndex] as ClassReference
-            return constantPool[classReference.nameIndex] as String
-        }
+    fun getMethodByNameAndDescriptor(name: String, descriptor: String): MethodInfo? =
+            methods.firstOrNull { it.name == name && it.descriptor == descriptor }
 }
 
 private const val MAGIC_NUMBER = -889275714 // 0xCAFEBABEu
@@ -54,20 +50,29 @@ fun DataInputStream.readClassInfo(): ClassInfo {
     val interfaces = List(numberOfInterfaces) {
         readUnsignedShort()
     }
-    val fields = readFields()
-    val methods = readMethods(constantPool)
-    val attributes = this.readAttributes()
 
-    return ClassInfo(majorVersion,
+    val classReference = constantPool[thisClass] as ClassReference
+    val name = constantPool[classReference.nameIndex] as String
+    val superClassName = if(superClass == 0) null else {
+        val superClassReference = constantPool[superClass] as ClassReference
+        constantPool[superClassReference.nameIndex] as String
+    }
+
+    val fields = readFields(constantPool)
+    val methods = readMethods(constantPool)
+    val attributes = readAttributes(constantPool)
+
+    return ClassInfo(
+            majorVersion,
             minorVersion,
-            constantPool,
             accessFlags,
-            thisClass,
-            superClass,
+            name,
+            superClassName,
             interfaces,
             fields,
             methods,
-            attributes)
+            attributes
+    )
 }
 
 private fun DataInputStream.readMethods(constantPool: ConstantPool): List<MethodInfo> =
@@ -81,27 +86,23 @@ private fun DataInputStream.readMethods(constantPool: ConstantPool): List<Method
             repeat(attributeCount) {
                 val attributeNameIndex = readUnsignedShort()
                 val attributeLength = readInt()
-                if(constantPool[attributeNameIndex] == "Code") {
+
+                val attributeName = constantPool[attributeNameIndex] as String
+                if (attributeName == "Code") {
                     try {
-                        codeAttribute = readCodeAttribute(attributeLength)
+                        codeAttribute = readCodeAttribute(constantPool)
                     } catch (ex: Throwable) {
-                        throw IllegalStateException("cannot read code attribute from method ${constantPool[nameIndex]}", ex)
+                        throw IllegalStateException("cannot read code attribute from method ${constantPool[nameIndex]} with length $attributeLength", ex)
                     }
                 } else {
                     val info = ByteArray(attributeLength)
                     readFully(info)
-                    otherAttributes += AttributeInfo(attributeNameIndex, info)
+                    otherAttributes += AttributeInfo(attributeName, info)
                 }
             }
 
-            MethodInfo(accessFlags, nameIndex, descriptorIndex, codeAttribute, otherAttributes)
+            val name = constantPool[nameIndex] as String
+            val descriptor = constantPool[descriptorIndex] as String
+
+            MethodInfo(accessFlags, name, descriptor, codeAttribute, otherAttributes)
         }
-
-private fun DataInputStream.readFields(): List<FieldInfo> = List(readUnsignedShort()) {
-    val accessFlags = readUnsignedShort()
-    val nameIndex = readUnsignedShort()
-    val descriptorIndex = readUnsignedShort()
-    val attributes = this.readAttributes()
-
-    FieldInfo(accessFlags, nameIndex, descriptorIndex, attributes)
-}

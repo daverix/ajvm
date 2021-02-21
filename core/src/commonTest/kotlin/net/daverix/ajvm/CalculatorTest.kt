@@ -81,9 +81,6 @@ class CalculatorTest {
     }
 
     private suspend fun invokeCalculator(args: String) {
-        sut.run(
-                className = "net/daverix/ajvm/test/Calculator",
-                args = args.split(" ").toTypedArray()
-        )
+        sut.run("net/daverix/ajvm/test/Calculator", args)
     }
 }

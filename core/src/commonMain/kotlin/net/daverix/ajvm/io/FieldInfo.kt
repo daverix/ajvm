@@ -18,8 +18,8 @@ package net.daverix.ajvm.io
 
 data class FieldInfo(
         val accessFlags: Int,
-        val nameIndex: Int,
-        val descriptorIndex: Int,
+        val name: String,
+        val descriptor: String,
         val attributes: List<AttributeInfo>
 ) {
     companion object {
@@ -33,4 +33,16 @@ data class FieldInfo(
         val ACC_SYNTHETIC = 0x1000
         val ACC_ENUM = 0x4000
     }
+}
+
+fun DataInputStream.readFields(constantPool: ConstantPool): List<FieldInfo> = List(readUnsignedShort()) {
+    val accessFlags = readUnsignedShort()
+    val nameIndex = readUnsignedShort()
+    val descriptorIndex = readUnsignedShort()
+    val attributes = readAttributes(constantPool)
+
+    val name = constantPool[nameIndex] as String
+    val descriptor = constantPool[descriptorIndex] as String
+
+    FieldInfo(accessFlags, name, descriptor, attributes)
 }

@@ -16,7 +16,7 @@
  */
 package net.daverix.ajvm
 
-class OperandStack(private val maxStackDepth: Int) {
+data class OperandStack(private val maxStackDepth: Int) {
     private val operandStack = mutableListOf<Any?>()
 
     fun push(item: Any?) {
@@ -26,12 +26,7 @@ class OperandStack(private val maxStackDepth: Int) {
         operandStack.add(item)
     }
 
-    fun pop(): Any? {
-        val size = operandStack.size
-        return if (size > 0) {
-            operandStack.removeAt(size - 1)
-        } else null
-    }
+    fun pop(): Any? = operandStack.removeLast()
 
     fun popMultiple(count: Int): Array<Any?> {
         val array = arrayOfNulls<Any?>(count)
@@ -41,5 +36,9 @@ class OperandStack(private val maxStackDepth: Int) {
         return array
     }
 
-    fun peek() = operandStack.lastOrNull()
+    fun peek() = operandStack.last()
+
+    override fun toString(): String {
+        return "OperandStack(max=$maxStackDepth, stack=$operandStack)"
+    }
 }

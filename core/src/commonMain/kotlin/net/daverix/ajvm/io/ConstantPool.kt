@@ -1,18 +1,23 @@
 package net.daverix.ajvm.io
 
-import net.daverix.ajvm.wrapToDouble
-import net.daverix.ajvm.wrapToLong
+import net.daverix.ajvm.*
+
+data class ClassReference(val nameIndex: Int)
+data class StringReference(val index: Int)
+data class FieldReference(val classIndex: Int, val nameAndTypeIndex: Int)
+data class MethodReference(val classIndex: Int, val nameAndTypeIndex: Int)
+data class InterfaceMethodReference(val classIndex: Int, val nameAndTypeIndex: Int)
+data class NameAndTypeDescriptorReference(val nameIndex: Int, val descriptorIndex: Int)
+data class MethodTypeReference(val descriptorIndex: Int)
+data class MethodHandleReference(val referenceKind: Int, val referenceIndex: Int)
+data class InvokeDynamicReference(val bootstrapMethodAttrIndex: Int, val nameAndTypeIndex: Int)
 
 data class ConstantPool(private val data: Array<Any?>) {
-    operator fun get(index: Int): Any? {
-        return data[index]
-    }
+    operator fun get(index: Int): Any? = data[index]
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as ConstantPool
+        if (other !is ConstantPool) return false
 
         if (!data.contentEquals(other.data)) return false
 
@@ -24,6 +29,7 @@ data class ConstantPool(private val data: Array<Any?>) {
     }
 
     companion object {
+
         private const val CONSTANT_TAG_UTF8 = 1
         private const val CONSTANT_TAG_INTEGER = 3
         private const val CONSTANT_TAG_FLOAT = 4

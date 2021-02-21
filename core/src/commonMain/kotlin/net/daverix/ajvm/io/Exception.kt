@@ -16,4 +16,17 @@
  */
 package net.daverix.ajvm.io
 
-class Exception
+data class Exception(
+        val startPc: Int,
+        val endPc: Int,
+        val handlerPc: Int,
+        val catchType: Int
+)
+
+fun DataInputStream.readExceptions(): List<Exception> = List(readUnsignedShort()) {
+    val startPc = readUnsignedShort()
+    val endPc = readUnsignedShort()
+    val handlerPc = readUnsignedShort()
+    val catchType = readUnsignedShort()
+    Exception(startPc, endPc, handlerPc, catchType)
+}
