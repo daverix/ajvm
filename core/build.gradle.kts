@@ -1,7 +1,7 @@
 import net.daverix.ajvm.plugin.GenerateTestDataTask
 
 plugins {
-    id("org.jetbrains.kotlin.multiplatform") version "1.4.30"
+    id("org.jetbrains.kotlin.multiplatform") version "1.5.0"
 }
 
 val testDataDir = file("$buildDir/testdata")

@@ -1,9 +1,11 @@
-enableFeaturePreview("GRADLE_METADATA")
+@file:Suppress("UnstableApiUsage")
+
+rootProject.name = "ajm"
 
 pluginManagement {
     repositories {
         gradlePluginPortal()
-        jcenter()
+        mavenCentral()
         google()
     }
     resolutionStrategy {
@@ -12,6 +14,13 @@ pluginManagement {
                 useModule("com.android.tools.build:gradle:${requested.version}")
             }
         }
+    }
+}
+
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
     }
 }
 
