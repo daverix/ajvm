@@ -90,7 +90,7 @@ fun DataInputStream.readClassInfo(): ClassInfo {
     }
     val fields = readFields()
     val methods = readMethods()
-    val attributes = readAttributes(this)
+    val attributes = this.readAttributes()
 
     return ClassInfo(majorVersion,
             minorVersion,
@@ -109,7 +109,7 @@ private fun DataInputStream.readMethods(): Array<MethodInfo> {
         val accessFlags = readUnsignedShort()
         val nameIndex = readUnsignedShort()
         val descriptorIndex = readUnsignedShort()
-        val attributes = readAttributes(this)
+        val attributes = this.readAttributes()
 
         MethodInfo(accessFlags, nameIndex, descriptorIndex, attributes)
     }
@@ -120,7 +120,7 @@ private fun DataInputStream.readFields(): Array<FieldInfo> {
         val accessFlags = readUnsignedShort()
         val nameIndex = readUnsignedShort()
         val descriptorIndex = readUnsignedShort()
-        val attributes = readAttributes(this)
+        val attributes = this.readAttributes()
 
         FieldInfo(accessFlags, nameIndex, descriptorIndex, attributes)
     }

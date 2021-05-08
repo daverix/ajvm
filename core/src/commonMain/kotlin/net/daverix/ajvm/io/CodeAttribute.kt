@@ -61,7 +61,7 @@ data class CodeAttribute(
             val exceptionTable = Array(exceptionCount) {
                 Exception()
             }
-            val attributes = readAttributes(input)
+            val attributes = input.readAttributes()
 
             return CodeAttribute(maxStack, maxLocals, code, exceptionTable, attributes)
         }
