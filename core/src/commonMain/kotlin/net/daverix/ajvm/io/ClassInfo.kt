@@ -76,7 +76,7 @@ private const val MAGIC_NUMBER = 0xCAFEBABEu
 fun DataInputStream.readClassInfo(): ClassInfo {
     val magicNumber = readInt().toUInt()
     if (magicNumber != MAGIC_NUMBER) {
-        error("Not a java class file, expected $MAGIC_NUMBER but got $magicNumber")
+        error("Not a java class file, expected ${MAGIC_NUMBER.toString(16)} but got ${magicNumber.toString(16)}")
     }
     val minorVersion = readUnsignedShort()
     val majorVersion = readUnsignedShort()
