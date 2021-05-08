@@ -71,10 +71,10 @@ data class ClassInfo(
     }
 }
 
-private const val MAGIC_NUMBER = -889275714 // 0xCAFEBABEu
+private const val MAGIC_NUMBER = 0xCAFEBABEu
 
 fun DataInputStream.readClassInfo(): ClassInfo {
-    val magicNumber = readInt()
+    val magicNumber = readInt().toUInt()
     if (magicNumber != MAGIC_NUMBER) {
         error("Not a java class file, expected $MAGIC_NUMBER but got $magicNumber")
     }
