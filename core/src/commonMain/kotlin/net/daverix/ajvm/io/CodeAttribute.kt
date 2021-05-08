@@ -46,24 +46,22 @@ data class CodeAttribute(
         result = 31 * result + attributes.contentHashCode()
         return result
     }
+}
 
-    companion object {
-        fun read(input: DataInputStream): CodeAttribute {
-            val maxStack = input.readUnsignedShort()
-            val maxLocals = input.readUnsignedShort()
-            val codeLength = input.readInt()
+fun DataInputStream.readCodeAttribute(): CodeAttribute {
+    val maxStack = readUnsignedShort()
+    val maxLocals = readUnsignedShort()
+    val codeLength = readInt()
 
-            val code = ByteArray(codeLength)
-            if (input.read(code) != codeLength)
-                error("could not read all bytes for code")
+    val code = ByteArray(codeLength)
+    if (read(code) != codeLength)
+        error("could not read all bytes for code")
 
-            val exceptionCount = input.readUnsignedShort()
-            val exceptionTable = Array(exceptionCount) {
-                Exception()
-            }
-            val attributes = input.readAttributes()
-
-            return CodeAttribute(maxStack, maxLocals, code, exceptionTable, attributes)
-        }
+    val exceptionCount = readUnsignedShort()
+    val exceptionTable = Array(exceptionCount) {
+        Exception()
     }
+    val attributes = readAttributes()
+
+    return CodeAttribute(maxStack, maxLocals, code, exceptionTable, attributes)
 }

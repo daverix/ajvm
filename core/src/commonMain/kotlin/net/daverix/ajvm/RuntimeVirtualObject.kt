@@ -30,7 +30,7 @@ class RuntimeVirtualObject(
         val method = getMethodByNameAndDescriptor(name, descriptor)
                 ?: error("Cannot find method $name in class ${classInfo.name}")
 
-        val (maxStack, maxLocals, code) = method.attributes["Code"].info.useDataInputStream { CodeAttribute.read(it) }
+        val (maxStack, maxLocals, code) = method.attributes["Code"].info.useDataInputStream { it.readCodeAttribute() }
         val stack = OperandStack(maxStack)
 
         val localVariables: Array<Any?> = arrayOfNulls(maxLocals)
