@@ -771,7 +771,7 @@ class RuntimeVirtualObject(
     }
 
     private fun Any?.getComputationalTypeCategory(): Int = when (this) {
-        this is Long || this is Double -> 2
+        (this is Long || this is Double) -> 2
         else -> 1
     }
 

@@ -1,14 +1,14 @@
 plugins {
-    id("com.android.application") version "4.1.2"
+    id("com.android.application") version "8.3.1"
 }
 
 android {
-    compileSdkVersion(30)
-    buildToolsVersion("30.0.2")
+    namespace = "net.daverix.ajvm"
+    compileSdk = 34
     defaultConfig {
         applicationId = "net.daverix.net.daverix.ajvm"
-        minSdkVersion(21)
-        targetSdkVersion(30)
+        minSdk = 21
+        targetSdk = 34
         versionCode = 1
         versionName = "$version"
         testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"

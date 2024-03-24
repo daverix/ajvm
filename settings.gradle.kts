@@ -1,19 +1,12 @@
 @file:Suppress("UnstableApiUsage")
 
-rootProject.name = "ajm"
+rootProject.name = "ajvm"
 
 pluginManagement {
     repositories {
         gradlePluginPortal()
         mavenCentral()
         google()
-    }
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.id == "com.android.application") {
-                useModule("com.android.tools.build:gradle:${requested.version}")
-            }
-        }
     }
 }
 

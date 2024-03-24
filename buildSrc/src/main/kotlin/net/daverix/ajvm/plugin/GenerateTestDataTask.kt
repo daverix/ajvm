@@ -1,22 +1,23 @@
 package net.daverix.ajvm.plugin
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
-import java.io.File
-import javax.inject.Inject
 
-open class GenerateTestDataTask @Inject constructor(
-        @InputDirectory val classesDir: File,
-        @OutputDirectory val outputDir: File
-) : DefaultTask() {
+abstract class GenerateTestDataTask : DefaultTask() {
+    @get:InputDirectory
+    abstract val classesDir: DirectoryProperty
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
 
     @TaskAction
     fun generateTestData() {
         val packageName = "net.daverix.ajvm.testdata"
         val relativePath = packageName.replace('.', '/')
-        val generatedFile = File(outputDir, "$relativePath/TestData.kt")
+        val generatedFile = outputDir.file("$relativePath/TestData.kt").get().asFile
         generatedFile.parentFile.mkdirs()
 
         val lines = mutableListOf<String>()
