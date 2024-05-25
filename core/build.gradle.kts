@@ -1,7 +1,7 @@
 import net.daverix.ajvm.plugin.GenerateTestDataTask
 
 plugins {
-    id("org.jetbrains.kotlin.multiplatform") version "1.9.20"
+    id("org.jetbrains.kotlin.multiplatform") version "2.0.0"
 }
 
 val testDataDir: Provider<Directory> = layout.buildDirectory.dir("testdata")
